@@ -1,12 +1,47 @@
 flow_version 1
 
 app github_integration {
+  identity {
+    id github.integration
+    name GitHub Integration
+    ui_protocol AppPort/ui/1
+  }
+
+  configuration {
+    requirement github.connection kind connection
+    requirement github.credential_reference kind credential_reference
+    requirement github.webhook_secret_reference kind webhook
+    status configured
+    status missing
+    status invalid
+    status needs_authorization
+  }
+
+  composition {
+    context identity
+    context tenant
+    context application
+    context environment
+    context capabilities
+  }
+
+  ui {
+    surface Connection route /connection
+    surface Organizations route /organizations capability github.organization.read
+    surface Repositories route /repositories capability github.repository.read
+    surface PullRequests route /pull-requests capability github.pull_request.read
+    surface Issues route /issues capability github.issue.read
+    surface Activity route /activity capability github.branch.read
+  }
+
   collection GitHubConnection {
     credential_reference: json
     auth_mechanism: text
     status: text
     tenant_id: text
     application_id: text
+    environment: text
+    provider: text
     created_at: datetime
     updated_at: datetime
     index tenant_id using hash(tenant_id)

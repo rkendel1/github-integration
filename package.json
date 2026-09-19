@@ -7,8 +7,9 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "npm run build && node --test dist/tests/*.test.js",
-    "check": "npm run build && npm test",
-    "start": "node dist/src/server.js"
+    "check": "npm run dependency-report && npm test",
+    "start": "node dist/src/server.js",
+    "dependency-report": "npm run build && node scripts/dependency-report.mjs"
   },
   "repository": {
     "type": "git",

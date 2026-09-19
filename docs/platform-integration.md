@@ -1,54 +1,99 @@
 # Platform integration
 
-This repository is the canonical GitHub boundary for platform consumers. It owns the normalized GitHub contract, machine API, UI discovery surface, webhook verification, operation correlation, and durable evidence. It does **not** replace platform authority, credential, runtime, or durable-state boundaries.
+This repository is the canonical GitHub boundary for the AppPort product ecosystem. It owns GitHub-facing semantics, the normalized machine API, the AppPort-native `AppPort/ui/1` contribution, webhook verification, durable operation records, and durable evidence. It does **not** replace AppPort, AuthBoundry, FeltDB, AppPort Services, AppBoundry, or PAX.
 
-## Discovered published packages
+## Publication-gap rule
 
-| Product | Published package used here | Version | Why it is consumed |
+Canonical repositories are architecturally authoritative. npm is the distribution mechanism. When the platform source moves ahead of npm publication, the GitHub Integration must preserve the existing architecture and use the smallest repository-native dependency mechanism available instead of copying code or inventing replacement packages.
+
+## Dependency audit
+
+| Platform | Canonical source | npm status | GitHub Integration usage |
 | --- | --- | --- | --- |
-| FeltDB | `@feltdb/core` | `0.11.4` | Durable integration state, webhook records, operation records, evidence |
-| AuthBoundry | `@authboundry/core` | `1.15.1` | Canonical authority projection and authorization checks |
-| AppPort protocol | `@appport/sdk` | `1.1.18` | Actual published AppPort protocol/contract package discovered during implementation |
-| AppPort Services | `@appport/services` | `0.4.0` | Credential/configuration reference types and service-boundary contract |
-| AppBoundry | `@appport/appboundry` | `1.0.10` | Runtime-boundary contract metadata |
+| AppPort | `git+https://github.com/rkendel1/appport.git` (from npm metadata; repository not directly accessible from this session) | `@appport/sdk@1.1.18` published | protocol/UI contract |
+| AppPort Services | `https://github.com/rkendel1/appport-services` | `@appport/services@0.4.0` published | configuration/credentials |
+| AuthBoundry | `git+https://github.com/rkendel1/authboundry.git` (from npm metadata; repository not directly accessible from this session) | `@authboundry/core@1.15.1` published | identity/authorization |
+| FeltDB | `git+https://github.com/rkendel1/feltdb.git` (from npm metadata; repository not directly accessible from this session) | `@feltdb/core@0.11.4` published | durable state |
+| AppBoundry | `git+https://github.com/rkendel1/appport.git` (from npm metadata; repository not directly accessible from this session) | `@appport/appboundry@1.0.10` published | runtime boundary |
+| PAX | `https://github.com/rkendel1/pax` | `pax@0.2.1` published, but kept external to this repository | project/tooling boundary |
+| Factory | `https://github.com/rkendel1/factory` | consumer, not a runtime dependency | integration consumer |
+| Attn | no public repository/package discoverable from this session | consumer/composition host, no package installed | UI composition host |
+| PNA | `https://github.com/rkendel1/pna` | future consumer, not a runtime dependency | future consumer |
 
-`@appport/core` was requested in the issue, but no public npm package was published under that exact name at implementation time. The current published AppPort contract package is `@appport/sdk`, so this repository documents and consumes that package instead of creating a fake compatibility shim.
+`@appport/core` was requested in the issue, but no public npm package was published under that exact name at implementation time. The current published AppPort contract package is `@appport/sdk`, so this repository consumes and documents that package instead of inventing a compatibility shim.
 
-## Ownership matrix
+No separate `@appport/ui` npm package was discoverable. `AppPort/ui/1` is implemented here as a protocol contract, not as a package dependency.
 
-| System | Role | What GitHub Integration consumes |
-| --- | --- | --- |
-| AppPort | protocol | Capability metadata, normalized schemas, product-neutral machine contract |
-| AppPort Services | configuration + credentials + services | Credential references, configuration requirements, externalized secret boundary |
-| AuthBoundry | authority | Canonical principal, tenant, authorization decision |
-| AppBoundry | runtime boundary | Runtime-boundary package contract metadata |
-| FeltDB | durable state | Connection metadata, installations, repositories, operations, webhook records, evidence |
-| PAX | project/tooling boundary | Not reimplemented here; documented as an external repository/tooling boundary |
-| Attn | desktop product | Consumer of `/v1/ui`; not a dependency |
-| Factory | execution product | First consumer of the normalized GitHub contract; not a dependency |
+## Package/publication state notes
 
-## Composition rules
+See `docs/dependency-report.json` for the machine-readable package/publication report. It records:
 
-- GitHub credentials remain outside ordinary state. This repository stores only credential references and connection metadata.
-- AuthBoundry remains authoritative for identity, tenancy, and authorization. Caller-supplied identity hints are ignored.
-- FeltDB remains the only durable state boundary used by this repository.
-- AppPort capability metadata remains product-neutral. The public contract exposes normalized GitHub operations rather than GitHub SDK types.
-- AppBoundry remains the runtime boundary; this repository only consumes its package contract metadata.
-- PAX remains the repository/project/tooling boundary for local repository execution. This repository does not embed arbitrary shell-based repository tooling.
+- package
+- version
+- published yes/no
+- canonical source
+- repository version when discoverable
+- required API
+- temporary integration mechanism
 
-## Configuration contract
+Development remains possible during publication transitions. Release checks fail only when `RELEASE_ARTIFACT=true` and a required published package is missing.
 
-The integration declares configuration requirements in `.flow` and `/v1/ui` metadata:
+## Ownership model
+
+- **AppPort** owns the product-native capability contract.
+- **AppPort Services** owns configuration, secrets, API keys, webhooks, and jobs.
+- **AuthBoundry** owns identity, tenant, and authorization.
+- **FeltDB** owns durable integration state and evidence.
+- **AppBoundry** owns the application/runtime boundary.
+- **PAX** owns repository/project/tooling execution.
+- **GitHub Integration** owns normalized GitHub semantics.
+- **Factory, Attn, and PNA** consume the integration.
+
+## Dependency direction
+
+```text
+GitHub Integration
+       │
+       ├── @authboundry/core
+       ├── @feltdb/core
+       ├── @appport/sdk
+       ├── @appport/services
+       └── @appport/appboundry
+
+Factory ──► GitHub Integration
+Attn ─────► GitHub Integration
+PNA ──────► GitHub Integration
+```
+
+This repository does not depend on Factory, Attn, or PNA.
+
+## Temporary integration mechanism
+
+The current repository uses published packages for its runtime dependencies. If a required package enters a publication gap later, the temporary mechanism must be a repository-native source dependency (workspace/local package/reference) that preserves the same product architecture. The integration must not respond by copying platform code or implementing a replacement boundary locally.
+
+## Configuration and credential boundary
+
+`.flow` and `GET /v1/ui` declare configuration requirements for:
 
 - GitHub connection metadata
-- GitHub credential reference
-- Optional GitHub App installation metadata
-- Webhook secret reference
+- GitHub installation/application metadata
+- GitHub credential references
+- GitHub webhook secret references
 
-Secret values are not stored in `.flow`, FeltDB records, evidence, URLs, logs, or UI discovery metadata.
+Raw secret values are not stored in `.flow`, FeltDB records, evidence, URLs, logs, or UI metadata. The durable state keeps only credential references and connection metadata.
 
-## Consumer model
+## AppPort/ui/1 relationship
 
-- **Factory** consumes the normalized GitHub contract and should stop owning generic GitHub boundary code.
-- **Attn** discovers the UI surface at `GET /v1/ui` and composes it without an Attn-specific adapter.
-- **Future hosts** can compose the same machine-readable capability and UI metadata without hard-coded product checks.
+The UI contribution uses `AppPort/ui/1` semantics:
+
+- product identity
+- same-application routes
+- navigation entries
+- capability-linked actions
+- composition context: identity, tenant, application, environment, capabilities
+
+Hosts compose this surface without product-specific code.
+
+## PAX relationship
+
+GitHub Integration owns remote GitHub state and GitHub mutations. PAX remains the read-only/delegated project-tooling boundary for local repository and build/test/tool operations. This repository does not embed repository-local shell execution.

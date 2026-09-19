@@ -5,5 +5,6 @@ export * from './integration.js';
 export * from './platform.js';
 export * from './state.js';
 export * from './types.js';
+export * from './ui-contract.js';
 export * from './ui.js';
 export * from './webhooks.js';

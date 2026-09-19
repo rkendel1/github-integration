@@ -1,0 +1,89 @@
+{
+  "generatedAt": "2026-09-19T23:05:33.102Z",
+  "protocol": "github-integration/dependency-report/1",
+  "packages": [
+    {
+      "platform": "AppPort",
+      "package": "@appport/sdk",
+      "version": "1.1.18",
+      "published": "yes",
+      "canonicalSource": "git+https://github.com/rkendel1/appport.git (repository URL from published npm metadata)",
+      "repositoryVersion": "not directly accessible from this session",
+      "requiredApi": "protocol/UI contract",
+      "temporaryIntegrationMechanism": "published npm package; if publication regresses, use repository-native source dependency without changing architecture"
+    },
+    {
+      "platform": "AppPort Services",
+      "package": "@appport/services",
+      "version": "0.4.0",
+      "published": "yes",
+      "canonicalSource": "https://github.com/rkendel1/appport-services",
+      "repositoryVersion": "0.4.0",
+      "requiredApi": "configuration/credentials",
+      "temporaryIntegrationMechanism": "published npm package"
+    },
+    {
+      "platform": "AuthBoundry",
+      "package": "@authboundry/core",
+      "version": "1.15.1",
+      "published": "yes",
+      "canonicalSource": "git+https://github.com/rkendel1/authboundry.git (repository URL from published npm metadata)",
+      "repositoryVersion": "not directly accessible from this session",
+      "requiredApi": "identity/authorization",
+      "temporaryIntegrationMechanism": "published npm package; repository-native source dependency if publication gap appears"
+    },
+    {
+      "platform": "FeltDB",
+      "package": "@feltdb/core",
+      "version": "0.11.4",
+      "published": "yes",
+      "canonicalSource": "git+https://github.com/rkendel1/feltdb.git (repository URL from published npm metadata)",
+      "repositoryVersion": "not directly accessible from this session",
+      "requiredApi": "durable state",
+      "temporaryIntegrationMechanism": "published npm package; repository-native source dependency if publication gap appears"
+    },
+    {
+      "platform": "AppBoundry",
+      "package": "@appport/appboundry",
+      "version": "1.0.10",
+      "published": "yes",
+      "canonicalSource": "git+https://github.com/rkendel1/appport.git (repository URL from published npm metadata)",
+      "repositoryVersion": "not directly accessible from this session",
+      "requiredApi": "runtime boundary",
+      "temporaryIntegrationMechanism": "published npm package; repository-native source dependency if publication gap appears"
+    },
+    {
+      "platform": "PAX",
+      "package": "pax",
+      "version": "0.2.1",
+      "published": "yes",
+      "canonicalSource": "https://github.com/rkendel1/pax",
+      "repositoryVersion": "0.1.0",
+      "requiredApi": "project/tooling boundary",
+      "temporaryIntegrationMechanism": "external executable boundary; not a runtime npm dependency of this repository"
+    },
+    {
+      "platform": "Factory",
+      "package": "software-factory",
+      "version": "not checked as runtime dependency",
+      "published": "no",
+      "canonicalSource": "https://github.com/rkendel1/factory",
+      "repositoryVersion": "1.0.0",
+      "requiredApi": "integration consumer",
+      "temporaryIntegrationMechanism": "consumer only; never a dependency of this repository"
+    },
+    {
+      "platform": "Attn",
+      "package": "not discovered",
+      "version": "not discovered",
+      "published": "no",
+      "canonicalSource": "no public repository/package discoverable from this session",
+      "repositoryVersion": "not discovered",
+      "requiredApi": "UI composition host",
+      "temporaryIntegrationMechanism": "consumer/composition host only; no dependency introduced"
+    }
+  ],
+  "releasePolicy": {
+    "failOnMissingPublishedPackageOnlyForReleaseArtifacts": true
+  }
+}

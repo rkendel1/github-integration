@@ -22,12 +22,17 @@ export interface GitHubConnection {
   id: string;
   tenantId: string;
   applicationId: string;
+  environment: string;
+  provider: 'github';
   credentialReference: SecretReference;
   webhookSecretReference?: SecretReference;
   authMechanism: 'github_app' | 'oauth_token' | 'personal_access_token';
   status: 'configured' | 'missing' | 'invalid' | 'needs_authorization';
   installationId?: number;
   defaultOwner?: string;
+  accountLogin?: string;
+  accountType?: string;
+  capabilities?: GitHubCapabilityName[];
   createdAt: string;
   updatedAt: string;
 }
@@ -51,6 +56,7 @@ export interface GitHubOrganization {
 }
 
 export interface GitHubRepository {
+  connectionId?: string;
   id: number;
   nodeId?: string;
   owner: string;
@@ -167,20 +173,29 @@ export interface GitHubUiAction {
   label: string;
   capability: GitHubCapabilityName;
   authorized: boolean;
+  route: string;
 }
 
 export interface GitHubUiSurface {
   id: string;
   label: string;
+  route: string;
   actions: GitHubUiAction[];
 }
 
 export interface GitHubUiManifest {
+  protocol: 'AppPort/ui/1';
   application: {
     id: string;
     name: string;
   };
+  navigation: Array<{ id: string; label: string; route: string }>;
+  composition: {
+    context: readonly ['identity', 'tenant', 'application', 'environment', 'capabilities'];
+  };
   configuration: {
+    applicationId: string;
+    environment?: string;
     status: GitHubConnection['status'];
     requirements: Array<{ id: string; kind: 'connection' | 'credential_reference' | 'webhook'; secret: false }>;
   };

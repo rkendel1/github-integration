@@ -1,17 +1,23 @@
 # Architecture audit
 
-This repository enforces the following architectural checks in `tests/architecture.test.ts`:
+This repository enforces architectural conformance in tests and validation code.
+
+Checks include:
 
 - no second durable database dependency
-- no second authorization system dependency
-- no local secret store dependency
-- no `factory`, `attn`, or `pna` runtime dependency
-- no duplicated AppPort Services credential storage
-- no duplicated AuthBoundry identity model
+- no second authorization engine dependency
+- no second secret store dependency
+- no `factory`, `attn`, `pna`, or `pax` runtime dependency
+- no duplicated AppPort Services credential store
+- no duplicated AuthBoundry identity, tenant, or authorization model
 - no duplicated AppBoundry runtime boundary
-- no duplicated PAX functionality
+- no duplicated PAX project/tooling boundary
 - no GitHub SDK types crossing the public API barrel
 - canonical `.flow` exists
-- UI metadata actions map to declared capabilities
-- mutation capabilities require authorization
-- mutation capabilities generate durable evidence
+- `AppPort/ui/1` metadata validates
+- UI actions map to declared capabilities
+- UI discovery filters actions/surfaces by capabilities
+- mutations require authorization
+- mutations generate durable evidence
+- webhook verification is durable and idempotent
+- secret values are absent from ordinary connection state and evidence

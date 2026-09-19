@@ -1,6 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { mkdtemp, rm } from 'node:fs/promises';
+import path from 'node:path';
+import { tmpdir } from 'node:os';
 import { createGitHubIntegration } from '../src/integration.js';
+import { createGitHubIntegrationState } from '../src/state.js';
 import { fixtureConnection, createTestHarness } from './helpers.js';
 import { signGitHubWebhook } from '../src/webhooks.js';
 
@@ -49,6 +53,19 @@ test('connection state stores references instead of secret material', async () =
   assert.equal('token' in ((stored as unknown) as Record<string, unknown>), false);
 });
 
+test('repository records are isolated by connection id', async () => {
+  const harness = createTestHarness(['github.repository.read']);
+  const integration = createGitHubIntegration({ ...harness, resolveWebhookSecret: async () => 'secret' });
+  await integration.upsertConnection(fixtureConnection());
+  await integration.upsertConnection({ ...fixtureConnection(), id: 'connection-2' });
+
+  await integration.repositories.get({ connectionId: 'connection-1', owner: 'acme', repository: 'repo' }, invocation);
+  await integration.repositories.get({ connectionId: 'connection-2', owner: 'acme', repository: 'repo' }, invocation);
+
+  const repositories = await harness.state.repositories.list();
+  assert.equal(repositories.length, 2);
+});
+
 test('valid webhook signatures persist durable webhook state and duplicate deliveries are idempotent', async () => {
   const harness = createTestHarness(['github.issue.read']);
   const integration = createGitHubIntegration({ ...harness, resolveWebhookSecret: async () => 'secret' });
@@ -73,12 +90,19 @@ test('valid webhook signatures persist durable webhook state and duplicate deliv
   assert.equal(records.length, 1);
 });
 
-test('invalid webhook signatures are rejected and persisted', async () => {
+test('invalid webhook signatures are rejected and cannot claim an earlier valid delivery id', async () => {
   const harness = createTestHarness(['github.issue.read']);
   const integration = createGitHubIntegration({ ...harness, resolveWebhookSecret: async () => 'secret' });
   await integration.upsertConnection(fixtureConnection());
 
   const rawBody = JSON.stringify({ action: 'opened' });
+  const validHeaders = {
+    'x-github-delivery': 'delivery-2',
+    'x-github-event': 'issues',
+    'x-hub-signature-256': signGitHubWebhook(rawBody, 'secret'),
+  };
+  await integration.handleWebhook('connection-1', rawBody, validHeaders);
+
   const record = await integration.handleWebhook('connection-1', rawBody, {
     'x-github-delivery': 'delivery-2',
     'x-github-event': 'issues',
@@ -87,17 +111,22 @@ test('invalid webhook signatures are rejected and persisted', async () => {
 
   assert.equal(record.signatureValid, false);
   assert.equal(record.status, 'rejected');
+
+  const records = await harness.state.webhooks.list();
+  assert.equal(records.length, 2);
 });
 
-test('ui discovery exposes product-neutral surfaces mapped to capabilities', async () => {
+test('ui discovery exposes only capability-filtered surfaces', async () => {
   const harness = createTestHarness(['github.pull_request.create', 'github.pull_request.merge']);
   const integration = createGitHubIntegration({ ...harness, resolveWebhookSecret: async () => 'secret' });
   await integration.upsertConnection(fixtureConnection());
 
   const ui = await integration.ui('github.integration');
+  const surfaceIds = ui.surfaces.map((surface) => surface.id);
   const pullRequests = ui.surfaces.find((surface) => surface.id === 'pull-requests');
 
-  assert.equal(ui.configuration.status, 'configured');
+  assert.equal(ui.protocol, 'AppPort/ui/1');
+  assert.deepEqual(surfaceIds, ['connection', 'pull-requests']);
   assert.ok(pullRequests);
   assert.deepEqual(
     pullRequests?.actions.map((action) => [action.capability, action.authorized]),
@@ -118,3 +147,21 @@ test('ui discovery selects the connection for the requested application id', asy
   assert.equal(ui.configuration.status, 'configured');
 });
 
+test('durable state survives restart when FeltDB uses the same path', async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'github-integration-state-'));
+  try {
+    const stateA = createGitHubIntegrationState({ namespace: 'github-integration-restart', path: root });
+    const harnessA = createTestHarness(['github.repository.read']);
+    const integrationA = createGitHubIntegration({ state: stateA, authority: harnessA.authority, transport: harnessA.transport, resolveWebhookSecret: async () => 'secret' });
+    await integrationA.upsertConnection(fixtureConnection());
+
+    const stateB = createGitHubIntegrationState({ namespace: 'github-integration-restart', path: root });
+    const harnessB = createTestHarness(['github.repository.read']);
+    const integrationB = createGitHubIntegration({ state: stateB, authority: harnessB.authority, transport: harnessB.transport, resolveWebhookSecret: async () => 'secret' });
+    const connection = await integrationB.getConnection('connection-1');
+
+    assert.equal(connection?.id, 'connection-1');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

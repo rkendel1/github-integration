@@ -1,61 +1,52 @@
 # Factory extraction audit
 
-## Factory state inspected
+## Repositories and files inspected
 
-The current `rkendel1/factory` repository depends on:
+- `rkendel1/factory/package.json`
+- `rkendel1/factory/.flow`
+- `rkendel1/factory/src/github.ts`
+- `rkendel1/factory/tests/*`
 
-- `@appport/appboundry@^1.0.10`
-- `@appport/sdk@^1.1.18`
-- `@appport/services@^0.4.0`
-- `@authboundry/core@^1.15.1`
-- `@feltdb/core@0.11.4`
+## 1. GitHub-specific logic that belongs in this repository
 
-Relevant inspected files:
-
-- `package.json`
-- `.flow`
-- `src/github.ts`
-
-## What Factory currently implements
-
-Factory currently contains a very small GitHub-specific file: `src/github.ts`. That file formats Factory execution results for GitHub-oriented output strings; it does **not** implement GitHub authentication, webhook handling, repository normalization, issue/PR lifecycle, or GitHub durable state.
-
-## Generic GitHub integration behavior
-
-The following behavior is generic platform GitHub boundary logic and belongs in this repository:
+Generic GitHub boundary behavior belongs here:
 
 - normalized GitHub capability contract
 - GitHub connection metadata and credential references
-- GitHub repository/issue/pull-request operations
-- GitHub webhook verification and normalization
-- durable GitHub operation/evidence records
-- product-neutral UI discovery for GitHub capabilities
+- GitHub repository, branch, commit, issue, and pull-request operations
+- GitHub webhook verification and durable webhook ingestion
+- durable GitHub operation and evidence records
+- AppPort-native GitHub UI discovery
 
-## Factory-specific behavior that remains in Factory
+## 2. Factory-specific execution logic that must remain in Factory
 
-Factory should retain:
+Factory remains responsible for:
 
 - execution-run orchestration
-- execution contracts and evidence formatting for Factory runs
+- execution contracts and run evidence formatting
+- PAX/native execution semantics
 - Factory-specific `.flow` collections and capabilities
-- PAX/native execution semantics owned by Factory
 
-## Code that moves or is replaced
+## 3. Existing API behavior that must remain compatible
 
-There is no large existing GitHub subsystem inside Factory to move today. Instead, this repository establishes the reusable GitHub boundary so Factory can consume it directly and eventually replace its small GitHub formatter with calls to the normalized GitHub contract when Factory needs repository, issue, or pull-request operations.
+Factory already depends on the platform stack (`@appport/sdk`, `@appport/services`, `@authboundry/core`, `@feltdb/core`, `@appport/appboundry`). The GitHub integration must preserve that dependency direction so Factory consumes a reusable GitHub boundary instead of owning one.
 
-## Factory APIs expected to consume this integration
+## 4. Existing GitHub evidence/provenance behavior
 
-Factory should consume this repository for:
+The current Factory repository contains only a small `src/github.ts` formatter that renders Factory execution evidence into GitHub-oriented text. There is no broad GitHub durable state model or GitHub webhook subsystem there today.
 
-- repository lookup and normalization
-- issue and pull-request creation/update/comment flows
-- durable GitHub evidence for repository-facing mutations
-- webhook-driven GitHub event ingestion where Factory needs GitHub-triggered workflows
+## 5. Existing GitHub authentication/configuration behavior
 
-## Behavior that must remain unchanged
+No concrete GitHub authentication or GitHub configuration subsystem was discovered in the current Factory repository. This repository therefore establishes the reusable connection and credential-reference boundary without importing Factory source.
 
-- Factory keeps AuthBoundry as the authority boundary.
-- Factory keeps FeltDB as the durable state boundary.
-- Factory keeps AppBoundry/PAX execution semantics unchanged.
-- Factory does not become the owner of GitHub credentials, GitHub SDK selection, or GitHub webhook processing.
+## 6. Existing webhook behavior, if any
+
+No GitHub webhook endpoint or webhook persistence layer was discovered in the current Factory repository during this audit.
+
+## 7. Migration steps
+
+1. Keep Factory’s execution semantics unchanged.
+2. Move generic GitHub machine API calls to this repository.
+3. Replace any future Factory-owned GitHub credential or webhook logic with this repository’s boundary.
+4. Keep Factory consuming AuthBoundry, FeltDB, AppPort Services, AppBoundry, and PAX through their existing responsibilities.
+5. Avoid a duplicate Factory-side GitHub subsystem.

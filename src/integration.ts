@@ -40,6 +40,12 @@ import type {
   UpdatePullRequestInput,
 } from './types.js';
 
+export class InvalidWebhookPayloadError extends Error {
+  constructor() {
+    super('Invalid webhook payload');
+  }
+}
+
 export interface GitHubIntegrationOptions {
   state?: GitHubIntegrationState;
   transport?: GitHubTransport;
@@ -100,6 +106,20 @@ async function putEvidence(state: GitHubIntegrationState, record: GitHubEvidence
 
 async function updateOperation(state: GitHubIntegrationState, operation: GitHubOperationRecord): Promise<void> {
   await state.operations.update(operation.id, operation);
+}
+
+function pickPreferredConnection(connections: GitHubConnection[]): GitHubConnection | null {
+  if (connections.length === 0) {
+    return null;
+  }
+  const priority = { configured: 0, needs_authorization: 1, invalid: 2, missing: 3 } as const;
+  return [...connections].sort((left, right) => {
+    const statusOrder = priority[left.status] - priority[right.status];
+    if (statusOrder !== 0) {
+      return statusOrder;
+    }
+    return right.updatedAt.localeCompare(left.updatedAt);
+  })[0] ?? null;
 }
 
 export function createGitHubIntegration(options: GitHubIntegrationOptions = {}) {
@@ -187,10 +207,10 @@ export function createGitHubIntegration(options: GitHubIntegrationOptions = {}) 
     async getConnection(connectionId: string): Promise<GitHubConnection | null> {
       return state.connections.get(connectionId);
     },
-    async ui(applicationId: string): Promise<Awaited<ReturnType<typeof createUiManifest>>> {
+    async ui(applicationId: string, authorityOverride?: AuthorityBoundary): Promise<Awaited<ReturnType<typeof createUiManifest>>> {
       const matches = await state.connections.find({ applicationId });
-      const connection = matches[0] ?? null;
-      return createUiManifest(applicationId, connection, authority);
+      const connection = pickPreferredConnection(matches);
+      return createUiManifest(applicationId, connection, authorityOverride ?? authority);
     },
     organizations: {
       list: (input: ListOrganizationsInput, invocation: InvocationInput) => runOperation('github.organization.read', input.connectionId, invocation, { type: 'organization', identifier: 'list' }, async (connection, context) => transport.organizations.list(connection, context, input)),
@@ -202,7 +222,7 @@ export function createGitHubIntegration(options: GitHubIntegrationOptions = {}) 
         const repository = await runOperation('github.repository.read', input.connectionId, invocation, { type: 'repository', identifier: `${input.owner}/${input.repository}`, owner: input.owner, repository: input.repository }, async (connection, context) => {
           return transport.repositories.get(connection, context, input);
         });
-        await state.repositories.insert(repository, `${input.connectionId}:${repository.owner}/${repository.name}`);
+        await state.repositories.insert({ ...repository, connectionId: input.connectionId }, `${input.connectionId}:${repository.owner}/${repository.name}`);
         return repository;
       },
     },
@@ -235,17 +255,23 @@ export function createGitHubIntegration(options: GitHubIntegrationOptions = {}) 
       const connection = await loadConnection(state, connectionId);
       const signature = headers['x-hub-signature-256'];
       const secret = await resolveWebhookSecret(connection);
-      const payload = JSON.parse(rawBody) as Record<string, unknown>;
+      let payload: Record<string, unknown>;
+      try {
+        payload = JSON.parse(rawBody) as Record<string, unknown>;
+      } catch {
+        throw new InvalidWebhookPayloadError();
+      }
       const normalized = normalizeGitHubWebhookEvent(headers, payload);
       const signatureValid = verifyGitHubWebhookSignature(rawBody, signature, secret);
+      const deterministicId = `${connectionId}:${String(normalized.deliveryId)}`;
       if (signatureValid) {
-        const existing = await state.webhooks.find({ deliveryId: String(normalized.deliveryId) });
-        if (existing.length > 0) {
-          return existing[0];
+        const existing = await state.webhooks.get(deterministicId);
+        if (existing) {
+          return existing;
         }
       }
       const record = {
-        id: randomUUID(),
+        id: signatureValid ? deterministicId : randomUUID(),
         connectionId,
         deliveryId: String(normalized.deliveryId),
         eventName: String(normalized.eventName),
@@ -257,7 +283,17 @@ export function createGitHubIntegration(options: GitHubIntegrationOptions = {}) 
         receivedAt: now(),
         processedAt: now(),
       } as const;
-      await state.webhooks.insert(record, record.id);
+      try {
+        await state.webhooks.insert(record, record.id);
+      } catch (error) {
+        if (signatureValid) {
+          const existing = await state.webhooks.get(deterministicId);
+          if (existing) {
+            return existing;
+          }
+        }
+        throw error;
+      }
       return record;
     },
   };

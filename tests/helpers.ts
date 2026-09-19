@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import type { AuthProjection } from '@authboundry/core';
 import { createStaticAuthority } from '../src/auth.js';
 import { createGitHubIntegrationState } from '../src/state.js';
@@ -21,10 +22,15 @@ export function fixtureConnection(): GitHubConnection {
     id: 'connection-1',
     tenantId: 'tenant:acme',
     applicationId: 'github.integration',
+    environment: 'test',
+    provider: 'github',
     credentialReference: { secretId: 'secret-1', tenantId: 'tenant:acme', provider: 'github' },
     webhookSecretReference: { secretId: 'webhook-1', tenantId: 'tenant:acme', provider: 'github' },
     authMechanism: 'personal_access_token',
     status: 'configured',
+    accountLogin: 'acme-app',
+    accountType: 'Organization',
+    capabilities: ['github.repository.read', 'github.issue.create'],
     createdAt: now,
     updatedAt: now,
   };
@@ -43,7 +49,7 @@ export function fixtureTransport(): GitHubTransport {
     branches: {
       async list() { return [{ name: 'main', sha: 'abc', protected: true }]; },
       async get() { return { name: 'main', sha: 'abc', protected: true }; },
-      async create(_connection, context, input) { return { name: input.branch, sha: input.fromSha, protected: false }; },
+      async create(_connection, _context, input) { return { name: input.branch, sha: input.fromSha, protected: false }; },
     },
     commits: {
       async list() { return [{ sha: 'abc', message: 'initial' }]; },
@@ -71,7 +77,7 @@ export function fixtureTransport(): GitHubTransport {
 export function createTestHarness(capabilities: string[]) {
   return {
     authority: createStaticAuthority(fixtureAuth(capabilities)),
-    state: createGitHubIntegrationState({ memory: true, namespace: 'github-integration-tests' }),
+    state: createGitHubIntegrationState({ memory: true, namespace: `github-integration-tests-${randomUUID()}` }),
     transport: fixtureTransport(),
   };
 }
