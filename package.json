@@ -1,0 +1,37 @@
+{
+  "name": "@rkendel1/github-integration",
+  "version": "1.0.0",
+  "description": "Platform-native standalone GitHub integration boundary",
+  "type": "module",
+  "main": "dist/src/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test dist/tests/*.test.js",
+    "check": "npm run build && npm test",
+    "start": "node dist/src/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://localhost:26831/rkendel1/github-integration"
+  },
+  "keywords": [
+    "github",
+    "integration",
+    "appport",
+    "authboundry",
+    "feltdb"
+  ],
+  "license": "ISC",
+  "dependencies": {
+    "@appport/appboundry": "1.0.10",
+    "@appport/sdk": "1.1.18",
+    "@appport/services": "0.4.0",
+    "@authboundry/core": "1.15.1",
+    "@feltdb/core": "0.11.4",
+    "@octokit/rest": "22.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.2",
+    "typescript": "7.0.2"
+  }
+}

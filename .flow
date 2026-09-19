@@ -1,0 +1,156 @@
+flow_version 1
+
+app github_integration {
+  collection GitHubConnection {
+    credential_reference: json
+    auth_mechanism: text
+    status: text
+    tenant_id: text
+    application_id: text
+    created_at: datetime
+    updated_at: datetime
+    index tenant_id using hash(tenant_id)
+    index status using hash(status)
+  }
+
+  collection GitHubInstallation {
+    connection_id: text
+    installation_id: integer
+    account_login: text
+    account_type: text
+    target_type: text
+    created_at: datetime
+    updated_at: datetime
+    index connection_id using hash(connection_id)
+    index installation_id using hash(installation_id)
+  }
+
+  collection GitHubRepository {
+    connection_id: text
+    owner: text
+    name: text
+    node_id: text
+    default_branch: text
+    private: boolean
+    archived: boolean
+    updated_at: datetime
+    index connection_id using hash(connection_id)
+    index owner using hash(owner)
+  }
+
+  collection GitHubWebhookEvent {
+    delivery_id: text
+    event_name: text
+    action: text
+    connection_id: text
+    repository_full_name: text
+    status: text
+    signature_valid: boolean
+    received_at: datetime
+    processed_at: datetime
+    index delivery_id using hash(delivery_id)
+    index event_name using hash(event_name)
+  }
+
+  collection GitHubOperation {
+    capability: text
+    principal_id: text
+    tenant_id: text
+    application_id: text
+    connection_id: text
+    resource_type: text
+    resource_id: text
+    status: text
+    created_at: datetime
+    updated_at: datetime
+    index capability using hash(capability)
+    index connection_id using hash(connection_id)
+  }
+
+  collection GitHubEvidence {
+    operation_id: text
+    capability: text
+    principal_id: text
+    tenant_id: text
+    application_id: text
+    result: text
+    github_resource: json
+    created_at: datetime
+    index operation_id using hash(operation_id)
+  }
+
+  capability GitHubOrganizationRead {
+    operation github.organization.read
+    grant github.organization.read
+  }
+
+  capability GitHubRepositoryRead {
+    operation github.repository.read
+    grant github.repository.read
+  }
+
+  capability GitHubBranchRead {
+    operation github.branch.read
+    grant github.branch.read
+  }
+
+  capability GitHubBranchCreate {
+    operation github.branch.create
+    grant github.branch.create
+  }
+
+  capability GitHubCommitRead {
+    operation github.commit.read
+    grant github.commit.read
+  }
+
+  capability GitHubIssueRead {
+    operation github.issue.read
+    grant github.issue.read
+  }
+
+  capability GitHubIssueCreate {
+    operation github.issue.create
+    grant github.issue.create
+  }
+
+  capability GitHubIssueUpdate {
+    operation github.issue.update
+    grant github.issue.update
+  }
+
+  capability GitHubIssueComment {
+    operation github.issue.comment
+    grant github.issue.comment
+  }
+
+  capability GitHubPullRequestRead {
+    operation github.pull_request.read
+    grant github.pull_request.read
+  }
+
+  capability GitHubPullRequestCreate {
+    operation github.pull_request.create
+    grant github.pull_request.create
+  }
+
+  capability GitHubPullRequestUpdate {
+    operation github.pull_request.update
+    grant github.pull_request.update
+  }
+
+  capability GitHubPullRequestComment {
+    operation github.pull_request.comment
+    grant github.pull_request.comment
+  }
+
+  capability GitHubPullRequestReview {
+    operation github.pull_request.review
+    grant github.pull_request.review
+  }
+
+  capability GitHubPullRequestMerge {
+    operation github.pull_request.merge
+    grant github.pull_request.merge
+  }
+}
