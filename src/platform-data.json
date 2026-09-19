@@ -1,0 +1,96 @@
+{
+  "discoveredPlatformPackages": [
+    { "product": "FeltDB", "packageName": "@feltdb/core", "version": "0.11.4", "reason": "durable integration state", "authorityOwner": "FeltDB" },
+    { "product": "AuthBoundry", "packageName": "@authboundry/core", "version": "1.15.1", "reason": "authority and authorization", "authorityOwner": "AuthBoundry" },
+    { "product": "AppPort protocol", "packageName": "@appport/sdk", "version": "1.1.18", "reason": "published AppPort contract package", "authorityOwner": "AppPort" },
+    { "product": "AppPort Services", "packageName": "@appport/services", "version": "0.4.0", "reason": "configuration and credential reference boundary", "authorityOwner": "AppPort Services" },
+    { "product": "AppBoundry", "packageName": "@appport/appboundry", "version": "1.0.10", "reason": "runtime boundary contract", "authorityOwner": "AppBoundry" }
+  ],
+  "platformAudit": [
+    {
+      "platform": "AppPort",
+      "canonicalSource": "git+https://github.com/rkendel1/appport.git (repository URL from published npm metadata)",
+      "packageName": "@appport/sdk",
+      "repositoryVersion": "not directly accessible from this session",
+      "publishedVersion": "1.1.18",
+      "published": true,
+      "requiredApi": "protocol/UI contract",
+      "temporaryIntegrationMechanism": "published npm package; if publication regresses, use repository-native source dependency without changing architecture"
+    },
+    {
+      "platform": "AppPort Services",
+      "canonicalSource": "https://github.com/rkendel1/appport-services",
+      "packageName": "@appport/services",
+      "repositoryVersion": "0.4.0",
+      "publishedVersion": "0.4.0",
+      "published": true,
+      "requiredApi": "configuration/credentials",
+      "temporaryIntegrationMechanism": "published npm package"
+    },
+    {
+      "platform": "AuthBoundry",
+      "canonicalSource": "git+https://github.com/rkendel1/authboundry.git (repository URL from published npm metadata)",
+      "packageName": "@authboundry/core",
+      "repositoryVersion": "not directly accessible from this session",
+      "publishedVersion": "1.15.1",
+      "published": true,
+      "requiredApi": "identity/authorization",
+      "temporaryIntegrationMechanism": "published npm package; repository-native source dependency if publication gap appears"
+    },
+    {
+      "platform": "FeltDB",
+      "canonicalSource": "git+https://github.com/rkendel1/feltdb.git (repository URL from published npm metadata)",
+      "packageName": "@feltdb/core",
+      "repositoryVersion": "not directly accessible from this session",
+      "publishedVersion": "0.11.4",
+      "published": true,
+      "requiredApi": "durable state",
+      "temporaryIntegrationMechanism": "published npm package; repository-native source dependency if publication gap appears"
+    },
+    {
+      "platform": "AppBoundry",
+      "canonicalSource": "git+https://github.com/rkendel1/appport.git (repository URL from published npm metadata)",
+      "packageName": "@appport/appboundry",
+      "repositoryVersion": "not directly accessible from this session",
+      "publishedVersion": "1.0.10",
+      "published": true,
+      "requiredApi": "runtime boundary",
+      "temporaryIntegrationMechanism": "published npm package; repository-native source dependency if publication gap appears"
+    },
+    {
+      "platform": "PAX",
+      "canonicalSource": "https://github.com/rkendel1/pax",
+      "packageName": "pax",
+      "repositoryVersion": "0.1.0",
+      "publishedVersion": "0.2.1",
+      "published": true,
+      "requiredApi": "project/tooling boundary",
+      "temporaryIntegrationMechanism": "external executable boundary; not a runtime npm dependency of this repository"
+    },
+    {
+      "platform": "Factory",
+      "canonicalSource": "https://github.com/rkendel1/factory",
+      "packageName": "software-factory",
+      "repositoryVersion": "1.0.0",
+      "publishedVersion": "not checked as runtime dependency",
+      "published": false,
+      "requiredApi": "integration consumer",
+      "temporaryIntegrationMechanism": "consumer only; never a dependency of this repository"
+    },
+    {
+      "platform": "Attn",
+      "canonicalSource": "no public repository/package discoverable from this session",
+      "packageName": "not discovered",
+      "repositoryVersion": "not discovered",
+      "publishedVersion": "not discovered",
+      "published": false,
+      "requiredApi": "UI composition host",
+      "temporaryIntegrationMechanism": "consumer/composition host only; no dependency introduced"
+    }
+  ],
+  "requiredConfiguration": [
+    { "id": "github.connection", "kind": "connection", "secret": false },
+    { "id": "github.credential_reference", "kind": "credential_reference", "secret": false },
+    { "id": "github.webhook_secret_reference", "kind": "webhook", "secret": false }
+  ]
+}
