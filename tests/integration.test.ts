@@ -116,6 +116,31 @@ test('invalid webhook signatures are rejected and cannot claim an earlier valid 
   assert.equal(records.length, 2);
 });
 
+test('malformed and unsupported webhook requests are rejected before persistence', async () => {
+  const harness = createTestHarness(['github.issue.read']);
+  const integration = createGitHubIntegration({ ...harness, resolveWebhookSecret: async () => 'secret' });
+  await integration.upsertConnection(fixtureConnection());
+
+  await assert.rejects(
+    integration.handleWebhook('connection-1', '{}', {
+      'x-github-delivery': 'delivery-3',
+      'x-github-event': 'unsupported',
+      'x-hub-signature-256': signGitHubWebhook('{}', 'secret'),
+    }),
+    /Invalid webhook payload/,
+  );
+  await assert.rejects(
+    integration.handleWebhook('connection-1', '[]', {
+      'x-github-delivery': 'delivery-4',
+      'x-github-event': 'issues',
+      'x-hub-signature-256': signGitHubWebhook('[]', 'secret'),
+    }),
+    /Invalid webhook payload/,
+  );
+
+  assert.equal((await harness.state.webhooks.list()).length, 0);
+});
+
 test('ui discovery exposes only capability-filtered surfaces', async () => {
   const harness = createTestHarness(['github.pull_request.create', 'github.pull_request.merge']);
   const integration = createGitHubIntegration({ ...harness, resolveWebhookSecret: async () => 'secret' });
