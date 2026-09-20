@@ -6,7 +6,7 @@ import { createOctokitTransport, type TokenResolver } from './octokit.js';
 import { appBoundryContract } from './platform.js';
 import { createGitHubIntegrationState, type GitHubIntegrationState } from './state.js';
 import { createUiManifest } from './ui.js';
-import { normalizeGitHubWebhookEvent, verifyGitHubWebhookSignature } from './webhooks.js';
+import { normalizeGitHubWebhookEvent, supportedWebhookEvents, verifyGitHubWebhookSignature } from './webhooks.js';
 import type {
   AuthorityBoundary,
   CommentIssueInput,
@@ -254,14 +254,25 @@ export function createGitHubIntegration(options: GitHubIntegrationOptions = {}) 
     async handleWebhook(connectionId: string, rawBody: string, headers: Record<string, string | undefined>) {
       const connection = await loadConnection(state, connectionId);
       const signature = headers['x-hub-signature-256'];
-      const secret = await resolveWebhookSecret(connection);
       let payload: Record<string, unknown>;
       try {
-        payload = JSON.parse(rawBody) as Record<string, unknown>;
+        const parsed: unknown = JSON.parse(rawBody);
+        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+          throw new Error('Webhook payload must be an object.');
+        }
+        payload = parsed as Record<string, unknown>;
       } catch {
         throw new InvalidWebhookPayloadError();
       }
       const normalized = normalizeGitHubWebhookEvent(headers, payload);
+      if (
+        !normalized.deliveryId ||
+        !normalized.eventName ||
+        !supportedWebhookEvents.has(String(normalized.eventName))
+      ) {
+        throw new InvalidWebhookPayloadError();
+      }
+      const secret = await resolveWebhookSecret(connection);
       const signatureValid = verifyGitHubWebhookSignature(rawBody, signature, secret);
       const deterministicId = `${connectionId}:${String(normalized.deliveryId)}`;
       if (signatureValid) {
