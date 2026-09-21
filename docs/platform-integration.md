@@ -11,7 +11,7 @@ Canonical repositories are architecturally authoritative. npm is the distributio
 | Platform | Canonical source | npm status | GitHub Integration usage |
 | --- | --- | --- | --- |
 | AppPort | `git+https://github.com/rkendel1/appport.git` (from npm metadata; repository not directly accessible from this session) | `@appport/sdk@1.1.19` published | protocol/UI contract |
-| AppPort Services | `https://github.com/rkendel1/appport-services` | `@appport/services@0.4.1` published | configuration/credentials |
+| AppPort Services | `https://github.com/rkendel1/appport-services` | `@appport/services@0.4.2` published | configuration/credentials |
 | AuthBoundry | `git+https://github.com/rkendel1/authboundry.git` (from npm metadata; repository not directly accessible from this session) | `@authboundry/core@1.15.1` published | identity/authorization |
 | FeltDB | `git+https://github.com/rkendel1/feltdb.git` (from npm metadata; repository not directly accessible from this session) | `@feltdb/core@0.11.4` published | durable state |
 | AppBoundry | `git+https://github.com/rkendel1/appport.git` (from npm metadata; repository not directly accessible from this session) | `@appport/appboundry@1.1.0` published | runtime boundary |

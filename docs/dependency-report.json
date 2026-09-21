@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-21T14:51:02.912Z",
+  "generatedAt": "2026-09-21T15:54:03.338Z",
   "protocol": "github-integration/dependency-report/1",
   "packages": [
     {
@@ -15,10 +15,10 @@
     {
       "platform": "AppPort Services",
       "package": "@appport/services",
-      "version": "0.4.1",
+      "version": "0.4.2",
       "published": "yes",
       "canonicalSource": "https://github.com/rkendel1/appport-services",
-      "repositoryVersion": "0.4.1",
+      "repositoryVersion": "0.4.2",
       "requiredApi": "configuration/credentials",
       "temporaryIntegrationMechanism": "published npm package"
     },

@@ -22,7 +22,7 @@ Pinned platform dependencies:
 - `@feltdb/core@0.11.4`
 - `@authboundry/core@1.15.1`
 - `@appport/sdk@1.1.19`
-- `@appport/services@0.4.1`
+- `@appport/services@0.4.2`
 - `@appport/appboundry@1.1.0`
 
 See `docs/dependency-report.json` for the machine-readable dependency audit.

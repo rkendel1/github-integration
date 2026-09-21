@@ -3,7 +3,7 @@
     { "product": "FeltDB", "packageName": "@feltdb/core", "version": "0.11.4", "reason": "durable integration state", "authorityOwner": "FeltDB" },
     { "product": "AuthBoundry", "packageName": "@authboundry/core", "version": "1.15.1", "reason": "authority and authorization", "authorityOwner": "AuthBoundry" },
     { "product": "AppPort protocol", "packageName": "@appport/sdk", "version": "1.1.19", "reason": "published AppPort contract package", "authorityOwner": "AppPort" },
-    { "product": "AppPort Services", "packageName": "@appport/services", "version": "0.4.1", "reason": "configuration and credential reference boundary", "authorityOwner": "AppPort Services" },
+    { "product": "AppPort Services", "packageName": "@appport/services", "version": "0.4.2", "reason": "configuration and credential reference boundary", "authorityOwner": "AppPort Services" },
     { "product": "AppBoundry", "packageName": "@appport/appboundry", "version": "1.1.0", "reason": "runtime boundary contract", "authorityOwner": "AppBoundry" }
   ],
   "platformAudit": [
@@ -21,8 +21,8 @@
       "platform": "AppPort Services",
       "canonicalSource": "https://github.com/rkendel1/appport-services",
       "packageName": "@appport/services",
-      "repositoryVersion": "0.4.1",
-      "publishedVersion": "0.4.1",
+      "repositoryVersion": "0.4.2",
+      "publishedVersion": "0.4.2",
       "published": true,
       "requiredApi": "configuration/credentials",
       "temporaryIntegrationMechanism": "published npm package"

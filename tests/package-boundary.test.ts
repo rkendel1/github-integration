@@ -10,7 +10,7 @@ test('package uses exact pinned platform dependency versions and documents apppo
 
   assert.equal(packageJson.dependencies['@feltdb/core'], '0.11.4');
   assert.equal(packageJson.dependencies['@authboundry/core'], '1.15.1');
-  assert.equal(packageJson.dependencies['@appport/services'], '0.4.1');
+  assert.equal(packageJson.dependencies['@appport/services'], '0.4.2');
   assert.equal(packageJson.dependencies['@appport/appboundry'], '1.1.0');
   assert.equal(packageJson.dependencies['@appport/sdk'], '1.1.19');
   assert.equal(packageJson.dependencies['pax'], undefined);
