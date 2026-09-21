@@ -2,7 +2,8 @@ import { randomUUID } from 'node:crypto';
 import type { AuthProjection } from '@authboundry/core';
 import { createStaticAuthority } from '../src/auth.js';
 import { createGitHubIntegrationState } from '../src/state.js';
-import type { GitHubConnection, GitHubTransport } from '../src/types.js';
+import type { GitHubConnection } from '../src/types.js';
+import type { GitHubTransport } from '../src/transport.js';
 
 export function fixtureAuth(capabilities: string[]): AuthProjection {
   return {

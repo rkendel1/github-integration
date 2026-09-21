@@ -18,3 +18,23 @@ test('package uses exact pinned platform dependency versions and documents apppo
   assert.equal(dependencyReport.protocol, 'github-integration/dependency-report/1');
   assert.ok(dependencyReport.packages.some((dependency) => dependency.package === '@appport/sdk' && dependency.published === 'yes'));
 });
+
+test('package exposes only its root and never depends on ecosystem consumers', async () => {
+  const packageJson = JSON.parse(await readFile(path.join(process.cwd(), 'package.json'), 'utf8')) as {
+    exports: Record<string, unknown>;
+    dependencies: Record<string, string>;
+    files: string[];
+  };
+
+  assert.deepEqual(Object.keys(packageJson.exports), ['.']);
+  assert.ok(packageJson.files.includes('.flow'));
+  assert.ok(packageJson.files.includes('dist/src'));
+  for (const consumer of ['factory', 'software-factory', 'attn', 'pna', 'pax']) {
+    assert.equal(packageJson.dependencies[consumer], undefined);
+  }
+});
+
+test('generated public barrel contains no provider transport or sdk types', async () => {
+  const declaration = await readFile(path.join(process.cwd(), 'dist', 'src', 'index.d.ts'), 'utf8');
+  assert.doesNotMatch(declaration, /Octokit|RequestError|@octokit|GitHubTransport|transport\.js/);
+});

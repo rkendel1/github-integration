@@ -60,7 +60,7 @@ export const server = createServer(async (request, response) => {
     const rawBody = Buffer.concat(chunks).toString('utf8');
     const headers = Object.fromEntries(Object.entries(request.headers).map(([key, value]) => [key, Array.isArray(value) ? value[0] : value]));
     try {
-      const body = await integration.handleWebhook(connectionId, rawBody, headers);
+      const body = await integration.webhooks.handle(connectionId, rawBody, headers);
       response.writeHead(body.signatureValid ? 202 : 401, { 'content-type': 'application/json' });
       response.end(JSON.stringify(body));
       return;

@@ -1,12 +1,15 @@
 import { randomUUID } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
 import { createAuthBoundry } from '@authboundry/core';
+import type { FeltDBOptions } from '@feltdb/core';
 import { createCanonicalInvocationContext } from './auth.js';
-import { capabilityMap, mutationCapabilities } from './capabilities.js';
-import { createOctokitTransport, type TokenResolver } from './octokit.js';
+import { mutationCapabilities } from './capabilities.js';
+import { createOctokitTransport } from './octokit.js';
 import { appBoundryContract } from './platform.js';
 import { createGitHubIntegrationState, type GitHubIntegrationState } from './state.js';
 import { createUiManifest } from './ui.js';
 import { normalizeGitHubWebhookEvent, supportedWebhookEvents, verifyGitHubWebhookSignature } from './webhooks.js';
+import type { GitHubTransport } from './transport.js';
 import type {
   AuthorityBoundary,
   CommentIssueInput,
@@ -26,7 +29,6 @@ import type {
   GitHubOperationRecord,
   GitHubPullRequest,
   GitHubResourceRef,
-  GitHubTransport,
   InvocationInput,
   ListBranchesInput,
   ListCommitsInput,
@@ -46,11 +48,22 @@ export class InvalidWebhookPayloadError extends Error {
   }
 }
 
+export interface GitHubIntegrationConfiguration {
+  resolveGitHubToken?: (connection: GitHubConnection, context: import('./types.js').CanonicalInvocationContext) => Promise<string>;
+  resolveWebhookSecret?: (connection: GitHubConnection) => Promise<string>;
+}
+
 export interface GitHubIntegrationOptions {
+  authority?: AuthorityBoundary;
+  felt?: FeltDBOptions;
+  configuration?: GitHubIntegrationConfiguration;
+}
+
+interface InternalGitHubIntegrationOptions {
   state?: GitHubIntegrationState;
   transport?: GitHubTransport;
   authority?: AuthorityBoundary;
-  resolveGitHubToken?: TokenResolver;
+  resolveGitHubToken?: GitHubIntegrationConfiguration['resolveGitHubToken'];
   resolveWebhookSecret?: (connection: GitHubConnection) => Promise<string>;
 }
 
@@ -122,7 +135,7 @@ function pickPreferredConnection(connections: GitHubConnection[]): GitHubConnect
   })[0] ?? null;
 }
 
-export function createGitHubIntegration(options: GitHubIntegrationOptions = {}) {
+function buildGitHubIntegration(options: InternalGitHubIntegrationOptions = {}) {
   const state = options.state ?? createGitHubIntegrationState();
   const authority = options.authority ?? createAuthBoundry({ baseUrl: process.env.AUTHBOUNDRY_URL });
   const transport = options.transport ?? createOctokitTransport(options.resolveGitHubToken ?? defaultTokenResolver);
@@ -198,8 +211,9 @@ export function createGitHubIntegration(options: GitHubIntegrationOptions = {}) 
 
   return {
     appBoundryContract,
-    state,
-    capabilityContracts: [...capabilityMap.values()],
+    async flow(): Promise<string> {
+      return readFile(new URL('../../.flow', import.meta.url), 'utf8');
+    },
     async upsertConnection(connection: GitHubConnection): Promise<GitHubConnection> {
       await state.connections.insert(connection, connection.id);
       return connection;
@@ -251,7 +265,8 @@ export function createGitHubIntegration(options: GitHubIntegrationOptions = {}) 
       review: (input: ReviewPullRequestInput, invocation: InvocationInput) => runOperation('github.pull_request.review', input.connectionId, invocation, { type: 'pull_request', identifier: String(input.pullNumber), owner: input.owner, repository: input.repository }, async (connection, context) => transport.pullRequests.review(connection, context, input)),
       merge: (input: MergePullRequestInput, invocation: InvocationInput) => runOperation('github.pull_request.merge', input.connectionId, invocation, { type: 'pull_request', identifier: String(input.pullNumber), owner: input.owner, repository: input.repository }, async (connection, context) => transport.pullRequests.merge(connection, context, input)),
     },
-    async handleWebhook(connectionId: string, rawBody: string, headers: Record<string, string | undefined>) {
+    webhooks: {
+      async handle(connectionId: string, rawBody: string, headers: Record<string, string | undefined>) {
       const connection = await loadConnection(state, connectionId);
       const signature = headers['x-hub-signature-256'];
       let payload: Record<string, unknown>;
@@ -306,6 +321,23 @@ export function createGitHubIntegration(options: GitHubIntegrationOptions = {}) 
         throw error;
       }
       return record;
+      },
     },
   };
+}
+
+export type GitHubIntegration = ReturnType<typeof buildGitHubIntegration>;
+
+export function createGitHubIntegration(options: GitHubIntegrationOptions = {}): GitHubIntegration {
+  return buildGitHubIntegration({
+    authority: options.authority,
+    state: createGitHubIntegrationState(options.felt),
+    resolveGitHubToken: options.configuration?.resolveGitHubToken,
+    resolveWebhookSecret: options.configuration?.resolveWebhookSecret,
+  });
+}
+
+/** Repository-internal construction seam for deterministic tests. Not exported by the package. */
+export function createGitHubIntegrationForTesting(options: InternalGitHubIntegrationOptions): GitHubIntegration {
+  return buildGitHubIntegration(options);
 }

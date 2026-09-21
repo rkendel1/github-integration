@@ -19,7 +19,6 @@ import type {
   GitHubOrganization,
   GitHubPullRequest,
   GitHubRepository,
-  GitHubTransport,
   ListBranchesInput,
   ListCommitsInput,
   ListIssuesInput,
@@ -31,6 +30,7 @@ import type {
   UpdateIssueInput,
   UpdatePullRequestInput,
 } from './types.js';
+import type { GitHubTransport } from './transport.js';
 
 export type TokenResolver = (connection: GitHubConnection, context: CanonicalInvocationContext) => Promise<string>;
 

@@ -1,10 +1,14 @@
-export * from './architecture-audit.js';
-export * from './auth.js';
-export * from './capabilities.js';
-export * from './integration.js';
-export * from './platform.js';
-export * from './state.js';
-export * from './types.js';
-export * from './ui-contract.js';
-export * from './ui.js';
-export * from './webhooks.js';
+export {
+  createGitHubIntegration,
+  InvalidWebhookPayloadError,
+} from './integration.js';
+export {
+  AuthenticationRequiredError,
+  AuthorizationRequiredError,
+} from './auth.js';
+export type {
+  GitHubIntegration,
+  GitHubIntegrationConfiguration,
+  GitHubIntegrationOptions,
+} from './integration.js';
+export type * from './types.js';

@@ -3,11 +3,32 @@
   "version": "1.0.0",
   "description": "Platform-native standalone GitHub integration boundary",
   "type": "module",
-  "main": "dist/src/index.js",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js"
+    }
+  },
+  "files": [
+    "dist/src",
+    "!dist/src/server.*",
+    "!dist/src/architecture-audit.*",
+    ".flow",
+    "README.md",
+    "docs/package.md",
+    "docs/consumer.md"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "npm run build && node --test dist/tests/*.test.js",
-    "check": "npm run dependency-report && npm test",
+    "check": "npm run dependency-report && npm test && npm run package:check",
+    "package": "npm run build && node scripts/package.mjs",
+    "package:check": "npm run build && node scripts/package-check.mjs",
     "start": "node dist/src/server.js",
     "dependency-report": "npm run build && node scripts/dependency-report.mjs"
   },

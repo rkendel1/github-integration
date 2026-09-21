@@ -31,10 +31,20 @@ See `docs/dependency-report.json` for the machine-readable dependency audit.
 
 ```bash
 npm install
-npm run dependency-report
+npm run build
 npm test
-npm start
+npm run package:check
 ```
+
+The installable package is `@rkendel1/github-integration@1.0.0` and supports Node.js 22 or newer. Only the package root is public:
+
+```ts
+import { createGitHubIntegration } from '@rkendel1/github-integration';
+
+const github = createGitHubIntegration({ authority, felt, configuration });
+```
+
+See [`docs/consumer.md`](docs/consumer.md) for the complete consumer contract and [`docs/package.md`](docs/package.md) for artifact contents, publication status, and the npm migration path.
 
 ## Configuration and credentials
 
@@ -86,6 +96,7 @@ Caller-supplied principal, tenant, and authorization hints are ignored.
 - `AppPort/ui/1` contribution intent
 
 It is the canonical product declaration, not an authorization engine.
+Packaged consumers obtain the same file through `await github.flow()`; there is no second host or TypeScript capability declaration.
 
 ## API
 
@@ -108,7 +119,7 @@ GitHub SDK types remain internal implementation details.
 
 ## Webhooks
 
-`POST /v1/github/webhooks` verifies GitHub webhook signatures, normalizes supported events, and persists durable webhook records in FeltDB for correlation and idempotency.
+`github.webhooks.handle(...)` and `POST /v1/github/webhooks` verify GitHub webhook signatures, normalize supported events, and persist durable webhook records in FeltDB for correlation and idempotency.
 
 Supported initial event families:
 

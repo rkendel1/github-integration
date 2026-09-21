@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { tmpdir } from 'node:os';
-import { createGitHubIntegration } from '../src/integration.js';
+import { createGitHubIntegrationForTesting } from '../src/integration.js';
 import { createGitHubIntegrationState } from '../src/state.js';
 import { fixtureConnection, createTestHarness } from './helpers.js';
 import { signGitHubWebhook } from '../src/webhooks.js';
@@ -16,7 +16,7 @@ const invocation = {
 
 test('mutations use AuthBoundry authority rather than caller-supplied identity and generate evidence', async () => {
   const harness = createTestHarness(['github.issue.create']);
-  const integration = createGitHubIntegration({ ...harness, resolveWebhookSecret: async () => 'secret' });
+  const integration = createGitHubIntegrationForTesting({ ...harness, resolveWebhookSecret: async () => 'secret' });
   await integration.upsertConnection(fixtureConnection());
 
   const issue = await integration.issues.create({ connectionId: 'connection-1', owner: 'acme', repository: 'repo', title: 'hello' }, invocation);
@@ -34,7 +34,7 @@ test('mutations use AuthBoundry authority rather than caller-supplied identity a
 
 test('authorization is required for mutations', async () => {
   const harness = createTestHarness([]);
-  const integration = createGitHubIntegration({ ...harness, resolveWebhookSecret: async () => 'secret' });
+  const integration = createGitHubIntegrationForTesting({ ...harness, resolveWebhookSecret: async () => 'secret' });
   await integration.upsertConnection(fixtureConnection());
 
   await assert.rejects(
@@ -45,7 +45,7 @@ test('authorization is required for mutations', async () => {
 
 test('connection state stores references instead of secret material', async () => {
   const harness = createTestHarness(['github.repository.read']);
-  const integration = createGitHubIntegration({ ...harness, resolveWebhookSecret: async () => 'secret' });
+  const integration = createGitHubIntegrationForTesting({ ...harness, resolveWebhookSecret: async () => 'secret' });
   await integration.upsertConnection(fixtureConnection());
 
   const stored = await integration.getConnection('connection-1');
@@ -55,7 +55,7 @@ test('connection state stores references instead of secret material', async () =
 
 test('repository records are isolated by connection id', async () => {
   const harness = createTestHarness(['github.repository.read']);
-  const integration = createGitHubIntegration({ ...harness, resolveWebhookSecret: async () => 'secret' });
+  const integration = createGitHubIntegrationForTesting({ ...harness, resolveWebhookSecret: async () => 'secret' });
   await integration.upsertConnection(fixtureConnection());
   await integration.upsertConnection({ ...fixtureConnection(), id: 'connection-2' });
 
@@ -68,7 +68,7 @@ test('repository records are isolated by connection id', async () => {
 
 test('valid webhook signatures persist durable webhook state and duplicate deliveries are idempotent', async () => {
   const harness = createTestHarness(['github.issue.read']);
-  const integration = createGitHubIntegration({ ...harness, resolveWebhookSecret: async () => 'secret' });
+  const integration = createGitHubIntegrationForTesting({ ...harness, resolveWebhookSecret: async () => 'secret' });
   await integration.upsertConnection(fixtureConnection());
 
   const rawBody = JSON.stringify({ action: 'opened', repository: { full_name: 'acme/repo' } });
@@ -79,8 +79,8 @@ test('valid webhook signatures persist durable webhook state and duplicate deliv
     'x-hub-signature-256': signature,
   };
 
-  const first = await integration.handleWebhook('connection-1', rawBody, headers);
-  const second = await integration.handleWebhook('connection-1', rawBody, headers);
+  const first = await integration.webhooks.handle('connection-1', rawBody, headers);
+  const second = await integration.webhooks.handle('connection-1', rawBody, headers);
 
   assert.equal(first.signatureValid, true);
   assert.equal(first.status, 'processed');
@@ -92,7 +92,7 @@ test('valid webhook signatures persist durable webhook state and duplicate deliv
 
 test('invalid webhook signatures are rejected and cannot claim an earlier valid delivery id', async () => {
   const harness = createTestHarness(['github.issue.read']);
-  const integration = createGitHubIntegration({ ...harness, resolveWebhookSecret: async () => 'secret' });
+  const integration = createGitHubIntegrationForTesting({ ...harness, resolveWebhookSecret: async () => 'secret' });
   await integration.upsertConnection(fixtureConnection());
 
   const rawBody = JSON.stringify({ action: 'opened' });
@@ -101,9 +101,9 @@ test('invalid webhook signatures are rejected and cannot claim an earlier valid 
     'x-github-event': 'issues',
     'x-hub-signature-256': signGitHubWebhook(rawBody, 'secret'),
   };
-  await integration.handleWebhook('connection-1', rawBody, validHeaders);
+  await integration.webhooks.handle('connection-1', rawBody, validHeaders);
 
-  const record = await integration.handleWebhook('connection-1', rawBody, {
+  const record = await integration.webhooks.handle('connection-1', rawBody, {
     'x-github-delivery': 'delivery-2',
     'x-github-event': 'issues',
     'x-hub-signature-256': 'sha256=bad',
@@ -118,11 +118,11 @@ test('invalid webhook signatures are rejected and cannot claim an earlier valid 
 
 test('malformed and unsupported webhook requests are rejected before persistence', async () => {
   const harness = createTestHarness(['github.issue.read']);
-  const integration = createGitHubIntegration({ ...harness, resolveWebhookSecret: async () => 'secret' });
+  const integration = createGitHubIntegrationForTesting({ ...harness, resolveWebhookSecret: async () => 'secret' });
   await integration.upsertConnection(fixtureConnection());
 
   await assert.rejects(
-    integration.handleWebhook('connection-1', '{}', {
+    integration.webhooks.handle('connection-1', '{}', {
       'x-github-delivery': 'delivery-3',
       'x-github-event': 'unsupported',
       'x-hub-signature-256': signGitHubWebhook('{}', 'secret'),
@@ -130,7 +130,7 @@ test('malformed and unsupported webhook requests are rejected before persistence
     /Invalid webhook payload/,
   );
   await assert.rejects(
-    integration.handleWebhook('connection-1', '[]', {
+    integration.webhooks.handle('connection-1', '[]', {
       'x-github-delivery': 'delivery-4',
       'x-github-event': 'issues',
       'x-hub-signature-256': signGitHubWebhook('[]', 'secret'),
@@ -143,7 +143,7 @@ test('malformed and unsupported webhook requests are rejected before persistence
 
 test('ui discovery exposes only capability-filtered surfaces', async () => {
   const harness = createTestHarness(['github.pull_request.create', 'github.pull_request.merge']);
-  const integration = createGitHubIntegration({ ...harness, resolveWebhookSecret: async () => 'secret' });
+  const integration = createGitHubIntegrationForTesting({ ...harness, resolveWebhookSecret: async () => 'secret' });
   await integration.upsertConnection(fixtureConnection());
 
   const ui = await integration.ui('github.integration');
@@ -164,7 +164,7 @@ test('ui discovery exposes only capability-filtered surfaces', async () => {
 
 test('ui discovery selects the connection for the requested application id', async () => {
   const harness = createTestHarness(['github.pull_request.create']);
-  const integration = createGitHubIntegration({ ...harness, resolveWebhookSecret: async () => 'secret' });
+  const integration = createGitHubIntegrationForTesting({ ...harness, resolveWebhookSecret: async () => 'secret' });
   await integration.upsertConnection({ ...fixtureConnection(), id: 'connection-2', applicationId: 'other.application', status: 'needs_authorization' });
   await integration.upsertConnection(fixtureConnection());
 
@@ -177,12 +177,12 @@ test('durable state survives restart when FeltDB uses the same path', async () =
   try {
     const stateA = createGitHubIntegrationState({ namespace: 'github-integration-restart', path: root });
     const harnessA = createTestHarness(['github.repository.read']);
-    const integrationA = createGitHubIntegration({ state: stateA, authority: harnessA.authority, transport: harnessA.transport, resolveWebhookSecret: async () => 'secret' });
+    const integrationA = createGitHubIntegrationForTesting({ state: stateA, authority: harnessA.authority, transport: harnessA.transport, resolveWebhookSecret: async () => 'secret' });
     await integrationA.upsertConnection(fixtureConnection());
 
     const stateB = createGitHubIntegrationState({ namespace: 'github-integration-restart', path: root });
     const harnessB = createTestHarness(['github.repository.read']);
-    const integrationB = createGitHubIntegration({ state: stateB, authority: harnessB.authority, transport: harnessB.transport, resolveWebhookSecret: async () => 'secret' });
+    const integrationB = createGitHubIntegrationForTesting({ state: stateB, authority: harnessB.authority, transport: harnessB.transport, resolveWebhookSecret: async () => 'secret' });
     const connection = await integrationB.getConnection('connection-1');
 
     assert.equal(connection?.id, 'connection-1');
