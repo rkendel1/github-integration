@@ -23,7 +23,7 @@ try {
   const pack = run('npm', ['pack', '--json', '--pack-destination', temporaryRoot], { cwd: root, capture: true, env: npmEnvironment });
   const [manifest] = JSON.parse(pack.stdout);
   assert.equal(manifest.name, '@rkendel1/github-integration');
-  assert.equal(manifest.version, '1.0.0');
+  assert.equal(manifest.version, '1.0.1');
   const included = new Set(manifest.files.map((file) => file.path));
   for (const required of ['package.json', '.flow', 'README.md', 'docs/package.md', 'docs/consumer.md', 'dist/src/index.js', 'dist/src/index.d.ts']) {
     assert.ok(included.has(required), `package is missing ${required}`);

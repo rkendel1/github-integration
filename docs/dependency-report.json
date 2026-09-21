@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-09-19T23:05:33.102Z",
+  "generatedAt": "2026-09-21T14:51:02.912Z",
   "protocol": "github-integration/dependency-report/1",
   "packages": [
     {
       "platform": "AppPort",
       "package": "@appport/sdk",
-      "version": "1.1.18",
+      "version": "1.1.19",
       "published": "yes",
       "canonicalSource": "git+https://github.com/rkendel1/appport.git (repository URL from published npm metadata)",
       "repositoryVersion": "not directly accessible from this session",
@@ -15,10 +15,10 @@
     {
       "platform": "AppPort Services",
       "package": "@appport/services",
-      "version": "0.4.0",
+      "version": "0.4.1",
       "published": "yes",
       "canonicalSource": "https://github.com/rkendel1/appport-services",
-      "repositoryVersion": "0.4.0",
+      "repositoryVersion": "0.4.1",
       "requiredApi": "configuration/credentials",
       "temporaryIntegrationMechanism": "published npm package"
     },
@@ -45,7 +45,7 @@
     {
       "platform": "AppBoundry",
       "package": "@appport/appboundry",
-      "version": "1.0.10",
+      "version": "1.1.0",
       "published": "yes",
       "canonicalSource": "git+https://github.com/rkendel1/appport.git (repository URL from published npm metadata)",
       "repositoryVersion": "not directly accessible from this session",

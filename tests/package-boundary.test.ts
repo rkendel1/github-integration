@@ -10,11 +10,11 @@ test('package uses exact pinned platform dependency versions and documents apppo
 
   assert.equal(packageJson.dependencies['@feltdb/core'], '0.11.4');
   assert.equal(packageJson.dependencies['@authboundry/core'], '1.15.1');
-  assert.equal(packageJson.dependencies['@appport/services'], '0.4.0');
-  assert.equal(packageJson.dependencies['@appport/appboundry'], '1.0.10');
-  assert.equal(packageJson.dependencies['@appport/sdk'], '1.1.18');
+  assert.equal(packageJson.dependencies['@appport/services'], '0.4.1');
+  assert.equal(packageJson.dependencies['@appport/appboundry'], '1.1.0');
+  assert.equal(packageJson.dependencies['@appport/sdk'], '1.1.19');
   assert.equal(packageJson.dependencies['pax'], undefined);
-  assert.match(docs, /`@appport\/core` was requested/);
+  assert.match(docs, /`@appport\/core` is now published/);
   assert.equal(dependencyReport.protocol, 'github-integration/dependency-report/1');
   assert.ok(dependencyReport.packages.some((dependency) => dependency.package === '@appport/sdk' && dependency.published === 'yes'));
 });

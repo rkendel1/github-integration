@@ -21,9 +21,9 @@ Pinned platform dependencies:
 
 - `@feltdb/core@0.11.4`
 - `@authboundry/core@1.15.1`
-- `@appport/sdk@1.1.18` (published AppPort protocol package discovered at implementation time)
-- `@appport/services@0.4.0`
-- `@appport/appboundry@1.0.10`
+- `@appport/sdk@1.1.19`
+- `@appport/services@0.4.1`
+- `@appport/appboundry@1.1.0`
 
 See `docs/dependency-report.json` for the machine-readable dependency audit.
 
@@ -36,7 +36,7 @@ npm test
 npm run package:check
 ```
 
-The installable package is `@rkendel1/github-integration@1.0.0` and supports Node.js 22 or newer. Only the package root is public:
+The installable package is `@rkendel1/github-integration@1.0.1` and supports Node.js 22 or newer. Only the package root is public:
 
 ```ts
 import { createGitHubIntegration } from '@rkendel1/github-integration';

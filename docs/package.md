@@ -1,6 +1,6 @@
 # Package and publication
 
-The canonical package identity is `@rkendel1/github-integration@1.0.0`. The canonical repository is the source of truth for development; a published npm package is an immutable registry artifact; an installed npm package is a particular resolved copy in a consumer. These are separate states and must not be treated as interchangeable.
+The canonical package identity is `@rkendel1/github-integration@1.0.1`. The canonical repository is the source of truth for development; a published npm package is an immutable registry artifact; an installed npm package is a particular resolved copy in a consumer. These are separate states and must not be treated as interchangeable.
 
 ## Entry point and artifact
 
@@ -20,10 +20,10 @@ All required runtime packages are currently published on npm at the exact versio
 
 ## Publication status and migration
 
-As of this repository version, `@rkendel1/github-integration@1.0.0` is packaged and verified locally but publication is not asserted by the repository. Consumers should install the generated tarball or use the repository-native dependency mechanism agreed for development. After npm publication, migration should be only the dependency reference:
+As of this repository version, `@rkendel1/github-integration@1.0.1` is packaged and verified locally but publication is not asserted by the repository. Consumers should install the generated tarball or use the repository-native dependency mechanism agreed for development. After npm publication, migration should be only the dependency reference:
 
 ```json
-{ "dependencies": { "@rkendel1/github-integration": "1.0.0" } }
+{ "dependencies": { "@rkendel1/github-integration": "1.0.1" } }
 ```
 
 If a platform package later has a publication gap, use its smallest supported repository/workspace reference without changing this public API, copying its source, inventing a version, or adding a compatibility implementation.
