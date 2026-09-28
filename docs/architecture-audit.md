@@ -13,7 +13,7 @@ Checks include:
 - no duplicated AppBoundry runtime boundary
 - no duplicated PAX project/tooling boundary
 - no GitHub SDK types crossing the public API barrel
-- canonical `.flow` exists
+- canonical `feltdb.flow` exists and validates against the pinned `@feltdb/core` FlowSpec grammar (`feltdb validate`)
 - `AppPort/ui/1` metadata validates
 - UI actions map to declared capabilities
 - UI discovery filters actions/surfaces by capabilities

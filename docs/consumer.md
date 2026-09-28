@@ -38,9 +38,9 @@ Authentication or authorization failure is reported before provider transport wi
 
 Pass the untouched request body and normalized string headers to `github.webhooks.handle(connectionId, rawBody, headers)`. The integration owns GitHub HMAC verification, payload normalization, supported-event validation, durable delivery records, and idempotency.
 
-## UI and `.flow`
+## UI and `feltdb.flow`
 
-`await github.ui(applicationId)` returns the capability-filtered `AppPort/ui/1` contribution. It contains no authorization grants, secret values, or host-owned durable state. `await github.flow()` returns the packaged canonical `.flow` text; hosts must not create a separate capability registry from it.
+`await github.ui(applicationId)` returns the capability-filtered `AppPort/ui/1` contribution. It contains no authorization grants, secret values, or host-owned durable state. `await github.flow()` returns the packaged canonical `feltdb.flow` text (real, `feltdb validate`-passing FlowSpec); hosts must not create a separate capability registry from it.
 
 ## Provider isolation and durability
 

@@ -1,39 +1,6 @@
 flow_version 1
 
 app github_integration {
-  identity {
-    id github.integration
-    name GitHub Integration
-    ui_protocol AppPort/ui/1
-  }
-
-  configuration {
-    requirement github.connection kind connection
-    requirement github.credential_reference kind credential_reference
-    requirement github.webhook_secret_reference kind webhook
-    status configured
-    status missing
-    status invalid
-    status needs_authorization
-  }
-
-  composition {
-    context identity
-    context tenant
-    context application
-    context environment
-    context capabilities
-  }
-
-  ui {
-    surface Connection route /connection
-    surface Organizations route /organizations capability github.organization.read
-    surface Repositories route /repositories capability github.repository.read
-    surface PullRequests route /pull-requests capability github.pull_request.read
-    surface Issues route /issues capability github.issue.read
-    surface Activity route /activity capability github.branch.read
-  }
-
   collection GitHubConnection {
     credential_reference: json
     auth_mechanism: text
@@ -115,76 +82,91 @@ app github_integration {
   }
 
   capability GitHubOrganizationRead {
+    visibility public
     operation github.organization.read
     grant github.organization.read
   }
 
   capability GitHubRepositoryRead {
+    visibility public
     operation github.repository.read
     grant github.repository.read
   }
 
   capability GitHubBranchRead {
+    visibility public
     operation github.branch.read
     grant github.branch.read
   }
 
   capability GitHubBranchCreate {
+    visibility public
     operation github.branch.create
     grant github.branch.create
   }
 
   capability GitHubCommitRead {
+    visibility public
     operation github.commit.read
     grant github.commit.read
   }
 
   capability GitHubIssueRead {
+    visibility public
     operation github.issue.read
     grant github.issue.read
   }
 
   capability GitHubIssueCreate {
+    visibility public
     operation github.issue.create
     grant github.issue.create
   }
 
   capability GitHubIssueUpdate {
+    visibility public
     operation github.issue.update
     grant github.issue.update
   }
 
   capability GitHubIssueComment {
+    visibility public
     operation github.issue.comment
     grant github.issue.comment
   }
 
   capability GitHubPullRequestRead {
+    visibility public
     operation github.pull_request.read
     grant github.pull_request.read
   }
 
   capability GitHubPullRequestCreate {
+    visibility public
     operation github.pull_request.create
     grant github.pull_request.create
   }
 
   capability GitHubPullRequestUpdate {
+    visibility public
     operation github.pull_request.update
     grant github.pull_request.update
   }
 
   capability GitHubPullRequestComment {
+    visibility public
     operation github.pull_request.comment
     grant github.pull_request.comment
   }
 
   capability GitHubPullRequestReview {
+    visibility public
     operation github.pull_request.review
     grant github.pull_request.review
   }
 
   capability GitHubPullRequestMerge {
+    visibility public
     operation github.pull_request.merge
     grant github.pull_request.merge
   }

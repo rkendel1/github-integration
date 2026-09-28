@@ -10,7 +10,7 @@ The only supported entry point is the package root:
 import { createGitHubIntegration } from '@appport/github';
 ```
 
-The root exports the constructor, public errors, normalized GitHub contracts, operation inputs, connection and webhook records, and `AppPort/ui/1` contribution types. Source paths and implementation subpaths are not exports. The artifact contains compiled runtime files, declarations, this documentation, the package README, and the authoritative `.flow`; it excludes repository source, tests, fixtures, scripts, and development configuration.
+The root exports the constructor, public errors, normalized GitHub contracts, operation inputs, connection and webhook records, and `AppPort/ui/1` contribution types. Source paths and implementation subpaths are not exports. The artifact contains compiled runtime files, declarations, this documentation, the package README, and the authoritative `feltdb.flow`; it excludes repository source, tests, fixtures, scripts, and development configuration.
 
 ## Dependencies
 
@@ -30,7 +30,7 @@ If a platform package later has a publication gap, use its smallest supported re
 
 ## Reproducibility
 
-`npm run package` builds through npm's standard packing lifecycle and writes the tarball to `artifacts/`. `npm run package:check` packs the same commit into a temporary directory, validates contents and exports, installs it in an isolated consumer, runs a public import and normalized operation, verifies `.flow`, and type-checks public contracts.
+`npm run package` builds through npm's standard packing lifecycle and writes the tarball to `artifacts/`. `npm run package:check` packs the same commit into a temporary directory, validates contents and exports, installs it in an isolated consumer, runs a public import and normalized operation, verifies `feltdb.flow` with `feltdb validate`, and type-checks public contracts.
 
 ## Intended Factory dependency
 

@@ -15,7 +15,7 @@
     "dist/src",
     "!dist/src/server.*",
     "!dist/src/architecture-audit.*",
-    ".flow",
+    "feltdb.flow",
     "README.md",
     "docs/package.md",
     "docs/consumer.md"

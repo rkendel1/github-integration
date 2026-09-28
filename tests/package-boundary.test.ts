@@ -27,7 +27,7 @@ test('package exposes only its root and never depends on ecosystem consumers', a
   };
 
   assert.deepEqual(Object.keys(packageJson.exports), ['.']);
-  assert.ok(packageJson.files.includes('.flow'));
+  assert.ok(packageJson.files.includes('feltdb.flow'));
   assert.ok(packageJson.files.includes('dist/src'));
   for (const consumer of ['factory', 'software-factory', 'attn', 'pna', 'pax']) {
     assert.equal(packageJson.dependencies[consumer], undefined);

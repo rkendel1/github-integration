@@ -52,7 +52,7 @@ GitHub connection metadata is durable. Credential values are not.
 
 Configuration requirements are declared in:
 
-- `.flow`
+- `src/ui-contract.ts` (`AppPort/ui/1` composition/configuration contract, enforced by `validateUiManifest`)
 - `GET /v1/ui`
 
 Expected configuration includes:
@@ -84,18 +84,16 @@ return normalized result
 
 Caller-supplied principal, tenant, and authorization hints are ignored.
 
-## .flow
+## feltdb.flow
 
-`.flow` declares:
+`feltdb.flow` is real FlowSpec, verified against the pinned `@feltdb/core@0.11.4` grammar with `feltdb validate feltdb.flow` (see `tests/architecture.test.ts`). It declares:
 
-- product identity
-- GitHub capabilities
-- durable collections
-- configuration requirements
-- credential requirements
-- `AppPort/ui/1` contribution intent
+- durable collections (`GitHubConnection`, `GitHubInstallation`, `GitHubRepository`, `GitHubWebhookEvent`, `GitHubOperation`, `GitHubEvidence`)
+- GitHub capabilities, one `capability` block per normalized operation, each with `visibility public`
 
-It is the canonical product declaration, not an authorization engine.
+Product identity, configuration requirements, composition context, and `AppPort/ui/1` surfaces are **not** FlowSpec concepts (the real `@feltdb/core` grammar only recognizes `collection`, `capability`, `agent`, `workflow`, `trigger`, `schedule`, `policy`, and `module` blocks — confirmed by parsing `node_modules/@feltdb/core/dist/flowspec.js`). That metadata is declared in TypeScript instead (`src/ui-contract.ts`, `src/platform.ts`), which is the actual AppPort-native surface for it, and is not duplicated in `feltdb.flow`.
+
+`feltdb.flow` is the canonical durable-state and capability declaration, not an authorization engine.
 Packaged consumers obtain the same file through `await github.flow()`; there is no second host or TypeScript capability declaration.
 
 ## API
