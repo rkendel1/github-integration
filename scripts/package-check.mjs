@@ -22,10 +22,10 @@ const npmEnvironment = { ...process.env, npm_config_cache: path.join(temporaryRo
 try {
   const pack = run('npm', ['pack', '--json', '--pack-destination', temporaryRoot], { cwd: root, capture: true, env: npmEnvironment });
   const [manifest] = JSON.parse(pack.stdout);
-  assert.equal(manifest.name, '@rkendel1/github-integration');
+  assert.equal(manifest.name, '@appport/github');
   assert.equal(manifest.version, '1.0.1');
   const included = new Set(manifest.files.map((file) => file.path));
-  for (const required of ['package.json', '.flow', 'README.md', 'docs/package.md', 'docs/consumer.md', 'dist/src/index.js', 'dist/src/index.d.ts']) {
+  for (const required of ['package.json', 'feltdb.flow', 'README.md', 'docs/package.md', 'docs/consumer.md', 'dist/src/index.js', 'dist/src/index.d.ts']) {
     assert.ok(included.has(required), `package is missing ${required}`);
   }
   assert.ok([...included].every((file) => !file.startsWith('tests/') && !file.startsWith('src/') && !file.startsWith('scripts/')));
@@ -40,7 +40,7 @@ try {
   }
 
   await writeFile(path.join(temporaryRoot, 'consumer.mjs'), `
-import { createGitHubIntegration } from '@rkendel1/github-integration';
+import { createGitHubIntegration } from '@appport/github';
 const authority = {
   async session() { return { authenticated: true, principal: { id: 'principal:test', kind: 'user' }, tenant: { id: 'tenant:test' }, claims: {}, capabilities: [], session: null, delegation: null }; },
   async authorize() { return false; },
@@ -49,13 +49,17 @@ const github = createGitHubIntegration({ authority, felt: { memory: true, namesp
 const now = new Date().toISOString();
 await github.upsertConnection({ id: 'connection-1', tenantId: 'tenant:test', applicationId: 'consumer', environment: 'test', provider: 'github', credentialReference: { secretId: 'secret-1', tenantId: 'tenant:test', provider: 'github' }, authMechanism: 'personal_access_token', status: 'configured', createdAt: now, updatedAt: now });
 await github.issues.create({ connectionId: 'connection-1', owner: 'acme', repository: 'repo', title: 'test' }, { applicationId: 'consumer' }).then(() => { throw new Error('operation unexpectedly authorized'); }, (error) => { if (!String(error).includes('Authorization required')) throw error; });
-if (!(await github.flow()).includes('app github_integration')) throw new Error('canonical .flow unavailable');
+if (!(await github.flow()).includes('app github_integration')) throw new Error('canonical feltdb.flow unavailable');
 if (github.appBoundryContract === undefined || typeof github.webhooks.handle !== 'function') throw new Error('public contract incomplete');
 `);
   await run(process.execPath, [path.join(temporaryRoot, 'consumer.mjs')], { cwd: temporaryRoot });
 
+  const packagedFlowPath = path.join(temporaryRoot, 'node_modules', '@appport', 'github', 'feltdb.flow');
+  const feltdbBinary = path.join(root, 'node_modules', '.bin', process.platform === 'win32' ? 'feltdb.cmd' : 'feltdb');
+  run(feltdbBinary, ['validate', packagedFlowPath], { cwd: temporaryRoot });
+
   await writeFile(path.join(temporaryRoot, 'consumer.ts'), `
-import { createGitHubIntegration, type GitHubConnection, type MergePullRequestInput } from '@rkendel1/github-integration';
+import { createGitHubIntegration, type GitHubConnection, type MergePullRequestInput } from '@appport/github';
 declare const connection: GitHubConnection;
 const input: MergePullRequestInput = { connectionId: connection.id, owner: 'acme', repository: 'repo', pullNumber: 1, method: 'squash' };
 const github = createGitHubIntegration();

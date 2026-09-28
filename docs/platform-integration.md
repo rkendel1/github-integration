@@ -73,14 +73,14 @@ The current repository uses published packages for its runtime dependencies. If 
 
 ## Configuration and credential boundary
 
-`.flow` and `GET /v1/ui` declare configuration requirements for:
+`src/ui-contract.ts`/`src/platform.ts` (the `AppPort/ui/1` contract) and `GET /v1/ui` declare configuration requirements for:
 
 - GitHub connection metadata
 - GitHub installation/application metadata
 - GitHub credential references
 - GitHub webhook secret references
 
-Raw secret values are not stored in `.flow`, FeltDB records, evidence, URLs, logs, or UI metadata. The durable state keeps only credential references and connection metadata.
+Raw secret values are not stored in `feltdb.flow`, FeltDB records, evidence, URLs, logs, or UI metadata. The durable state keeps only credential references and connection metadata.
 
 ## AppPort/ui/1 relationship
 

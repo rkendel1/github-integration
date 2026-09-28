@@ -212,7 +212,7 @@ function buildGitHubIntegration(options: InternalGitHubIntegrationOptions = {}) 
   return {
     appBoundryContract,
     async flow(): Promise<string> {
-      return readFile(new URL('../../.flow', import.meta.url), 'utf8');
+      return readFile(new URL('../../feltdb.flow', import.meta.url), 'utf8');
     },
     async upsertConnection(connection: GitHubConnection): Promise<GitHubConnection> {
       await state.connections.insert(connection, connection.id);
