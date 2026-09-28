@@ -22,7 +22,7 @@ const npmEnvironment = { ...process.env, npm_config_cache: path.join(temporaryRo
 try {
   const pack = run('npm', ['pack', '--json', '--pack-destination', temporaryRoot], { cwd: root, capture: true, env: npmEnvironment });
   const [manifest] = JSON.parse(pack.stdout);
-  assert.equal(manifest.name, '@rkendel1/github-integration');
+  assert.equal(manifest.name, '@appport/github');
   assert.equal(manifest.version, '1.0.1');
   const included = new Set(manifest.files.map((file) => file.path));
   for (const required of ['package.json', '.flow', 'README.md', 'docs/package.md', 'docs/consumer.md', 'dist/src/index.js', 'dist/src/index.d.ts']) {
@@ -40,7 +40,7 @@ try {
   }
 
   await writeFile(path.join(temporaryRoot, 'consumer.mjs'), `
-import { createGitHubIntegration } from '@rkendel1/github-integration';
+import { createGitHubIntegration } from '@appport/github';
 const authority = {
   async session() { return { authenticated: true, principal: { id: 'principal:test', kind: 'user' }, tenant: { id: 'tenant:test' }, claims: {}, capabilities: [], session: null, delegation: null }; },
   async authorize() { return false; },
@@ -55,7 +55,7 @@ if (github.appBoundryContract === undefined || typeof github.webhooks.handle !==
   await run(process.execPath, [path.join(temporaryRoot, 'consumer.mjs')], { cwd: temporaryRoot });
 
   await writeFile(path.join(temporaryRoot, 'consumer.ts'), `
-import { createGitHubIntegration, type GitHubConnection, type MergePullRequestInput } from '@rkendel1/github-integration';
+import { createGitHubIntegration, type GitHubConnection, type MergePullRequestInput } from '@appport/github';
 declare const connection: GitHubConnection;
 const input: MergePullRequestInput = { connectionId: connection.id, owner: 'acme', repository: 'repo', pullNumber: 1, method: 'squash' };
 const github = createGitHubIntegration();

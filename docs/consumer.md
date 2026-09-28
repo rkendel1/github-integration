@@ -3,7 +3,7 @@
 ## Construction
 
 ```ts
-import { createGitHubIntegration } from '@rkendel1/github-integration';
+import { createGitHubIntegration } from '@appport/github';
 
 const github = createGitHubIntegration({
   authority,

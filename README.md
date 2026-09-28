@@ -36,10 +36,10 @@ npm test
 npm run package:check
 ```
 
-The installable package is `@rkendel1/github-integration@1.0.1` and supports Node.js 22 or newer. Only the package root is public:
+The installable package is `@appport/github@1.0.1` and supports Node.js 22 or newer. Only the package root is public:
 
 ```ts
-import { createGitHubIntegration } from '@rkendel1/github-integration';
+import { createGitHubIntegration } from '@appport/github';
 
 const github = createGitHubIntegration({ authority, felt, configuration });
 ```
