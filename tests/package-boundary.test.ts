@@ -24,9 +24,14 @@ test('package exposes only its root and never depends on ecosystem consumers', a
     exports: Record<string, unknown>;
     dependencies: Record<string, string>;
     files: string[];
+    repository: { type: string; url: string };
   };
 
   assert.deepEqual(Object.keys(packageJson.exports), ['.']);
+  assert.deepEqual(packageJson.repository, {
+    type: 'git',
+    url: 'https://github.com/rkendel1/github-integration.git',
+  });
   assert.ok(packageJson.files.includes('.flow'));
   assert.ok(packageJson.files.includes('dist/src'));
   for (const consumer of ['factory', 'software-factory', 'attn', 'pna', 'pax']) {

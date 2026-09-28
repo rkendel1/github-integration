@@ -34,7 +34,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "http://localhost:26831/rkendel1/github-integration"
+    "url": "https://github.com/rkendel1/github-integration.git"
   },
   "keywords": [
     "github",
