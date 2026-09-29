@@ -19,11 +19,11 @@ This repository is **not** a generic GitHub SDK, **not** a new portal, and **not
 
 Pinned platform dependencies:
 
-- `@feltdb/core@0.11.4`
-- `@authboundry/core@1.15.1`
-- `@appport/sdk@1.1.19`
-- `@appport/services@0.4.2`
-- `@appport/appboundry@1.1.0`
+- `@feltdb/core@0.11.9`
+- `@authboundry/core@1.15.3`
+- `@appport/sdk@1.1.22`
+- `@appport/services@0.4.6`
+- `@appport/appboundry@1.1.1`
 
 See `docs/dependency-report.json` for the machine-readable dependency audit.
 
@@ -86,7 +86,7 @@ Caller-supplied principal, tenant, and authorization hints are ignored.
 
 ## feltdb.flow
 
-`feltdb.flow` is real FlowSpec, verified against the pinned `@feltdb/core@0.11.4` grammar with `feltdb validate feltdb.flow` (see `tests/architecture.test.ts`). It declares:
+`feltdb.flow` is real FlowSpec, verified against the pinned `@feltdb/core@0.11.9` grammar with `feltdb validate feltdb.flow` (see `tests/architecture.test.ts`). It declares:
 
 - durable collections (`GitHubConnection`, `GitHubInstallation`, `GitHubRepository`, `GitHubWebhookEvent`, `GitHubOperation`, `GitHubEvidence`)
 - GitHub capabilities, one `capability` block per normalized operation, each with `visibility public`

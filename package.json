@@ -29,6 +29,7 @@
     "check": "npm run dependency-report && npm test && npm run package:check",
     "package": "npm run build && node scripts/package.mjs",
     "package:check": "npm run build && node scripts/package-check.mjs",
+    "publish:packages": "npm test && npm run package:check && npm login --auth-type=web && npm publish --access public",
     "start": "node dist/src/server.js",
     "dependency-report": "npm run build && node scripts/dependency-report.mjs"
   },
@@ -45,15 +46,15 @@
   ],
   "license": "ISC",
   "dependencies": {
-    "@appport/appboundry": "1.1.0",
-    "@appport/sdk": "1.1.19",
-    "@appport/services": "0.4.2",
-    "@authboundry/core": "1.15.1",
-    "@feltdb/core": "0.11.4",
+    "@appport/appboundry": "1.1.1",
+    "@appport/sdk": "1.1.22",
+    "@appport/services": "0.4.6",
+    "@authboundry/core": "1.15.3",
+    "@feltdb/core": "0.11.9",
     "@octokit/rest": "22.0.1"
   },
   "devDependencies": {
-    "@types/node": "26.6.2",
+    "@types/node": "26.6.3",
     "typescript": "7.0.2"
   }
 }

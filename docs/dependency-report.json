@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-09-28T23:45:27.165Z",
+  "generatedAt": "2026-09-29T13:00:06.457Z",
   "protocol": "github-integration/dependency-report/1",
   "packages": [
     {
       "platform": "AppPort",
       "package": "@appport/sdk",
-      "version": "1.1.19",
+      "version": "1.1.22",
       "published": "yes",
       "canonicalSource": "git+https://github.com/rkendel1/appport.git (repository URL from published npm metadata)",
       "repositoryVersion": "not directly accessible from this session",
@@ -15,17 +15,17 @@
     {
       "platform": "AppPort Services",
       "package": "@appport/services",
-      "version": "0.4.2",
+      "version": "0.4.6",
       "published": "yes",
       "canonicalSource": "https://github.com/rkendel1/appport-services",
-      "repositoryVersion": "0.4.2",
+      "repositoryVersion": "0.4.6",
       "requiredApi": "configuration/credentials",
       "temporaryIntegrationMechanism": "published npm package"
     },
     {
       "platform": "AuthBoundry",
       "package": "@authboundry/core",
-      "version": "1.15.1",
+      "version": "1.15.3",
       "published": "yes",
       "canonicalSource": "git+https://github.com/rkendel1/authboundry.git (repository URL from published npm metadata)",
       "repositoryVersion": "not directly accessible from this session",
@@ -35,7 +35,7 @@
     {
       "platform": "FeltDB",
       "package": "@feltdb/core",
-      "version": "0.11.4",
+      "version": "0.11.9",
       "published": "yes",
       "canonicalSource": "git+https://github.com/rkendel1/feltdb.git (repository URL from published npm metadata)",
       "repositoryVersion": "not directly accessible from this session",
@@ -45,7 +45,7 @@
     {
       "platform": "AppBoundry",
       "package": "@appport/appboundry",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "published": "yes",
       "canonicalSource": "git+https://github.com/rkendel1/appport.git (repository URL from published npm metadata)",
       "repositoryVersion": "not directly accessible from this session",

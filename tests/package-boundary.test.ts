@@ -8,11 +8,11 @@ test('package uses exact pinned platform dependency versions and documents apppo
   const docs = await readFile(path.join(process.cwd(), 'docs', 'platform-integration.md'), 'utf8');
   const dependencyReport = JSON.parse(await readFile(path.join(process.cwd(), 'docs', 'dependency-report.json'), 'utf8')) as { protocol: string; packages: Array<{ package: string; published: string }> };
 
-  assert.equal(packageJson.dependencies['@feltdb/core'], '0.11.4');
-  assert.equal(packageJson.dependencies['@authboundry/core'], '1.15.1');
-  assert.equal(packageJson.dependencies['@appport/services'], '0.4.2');
-  assert.equal(packageJson.dependencies['@appport/appboundry'], '1.1.0');
-  assert.equal(packageJson.dependencies['@appport/sdk'], '1.1.19');
+  assert.equal(packageJson.dependencies['@feltdb/core'], '0.11.9');
+  assert.equal(packageJson.dependencies['@authboundry/core'], '1.15.3');
+  assert.equal(packageJson.dependencies['@appport/services'], '0.4.6');
+  assert.equal(packageJson.dependencies['@appport/appboundry'], '1.1.1');
+  assert.equal(packageJson.dependencies['@appport/sdk'], '1.1.22');
   assert.equal(packageJson.dependencies['pax'], undefined);
   assert.match(docs, /`@appport\/core` is now published/);
   assert.equal(dependencyReport.protocol, 'github-integration/dependency-report/1');
