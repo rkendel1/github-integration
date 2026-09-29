@@ -1,0 +1,41 @@
+{
+  "protocol": "appport-github/release-verification/1",
+  "package": "@appport/github",
+  "version": "1.0.2",
+  "publishedAt": "2026-09-29",
+  "registry": "https://registry.npmjs.org/",
+  "dist": {
+    "shasum": "8d405cae2bf13b2c8282f37b01db630e7088b200",
+    "integrity": "sha512-LOT/3+0TSIHP4zMweMnVtrPS6LfkN5nT9klF8C3sT4CORrOR5aL//XfNYZCFoRl3NmK6ZcovPrCSNh8K+r9YNg==",
+    "files": 33,
+    "packageBytes": 21974,
+    "unpackedBytes": 101983
+  },
+  "verification": {
+    "unitAndContractTests": { "passed": 38, "failed": 0, "releaseOnlySkipped": 1 },
+    "publicRepositoryE2E": { "passed": 1, "failed": 0, "credentialResolverCalled": false },
+    "isolatedTarballConsumer": "pass",
+    "publishedRegistryInstall": "pass",
+    "publishedRootImport": "pass",
+    "registryAuditVulnerabilities": 0,
+    "computeImportsGitHubPackage": false,
+    "githubPackageImportsCompute": false
+  },
+  "matrix": {
+    "appPortDsl": "PASS",
+    "scopedCapabilities": "PASS",
+    "providerManifest": "PASS",
+    "semanticOperationNames": "PASS",
+    "credentialIsolation": "PASS",
+    "feltDbPersistence": "PASS",
+    "publicRepositoryAccess": "PASS",
+    "sourceResolution": "PASS",
+    "immutableCommitProvenance": "PASS",
+    "providerNeutralSource": "PASS",
+    "computeIndependence": "PASS",
+    "publicPackageExports": "PASS",
+    "publishedTarball": "PASS",
+    "errorSecretIsolation": "PASS",
+    "documentationParity": "PASS"
+  }
+}
