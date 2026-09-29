@@ -50,6 +50,24 @@ export class InvalidWebhookPayloadError extends Error {
   }
 }
 
+export type GitHubCapabilityErrorCode =
+  | 'INVALID_INPUT'
+  | 'REPOSITORY_NOT_FOUND'
+  | 'REF_NOT_FOUND'
+  | 'AUTHENTICATION_UNAVAILABLE'
+  | 'PROVIDER_FAILURE';
+
+export class GitHubCapabilityError extends Error {
+  constructor(
+    readonly code: GitHubCapabilityErrorCode,
+    readonly operation: GitHubCapabilityName,
+    readonly context: Readonly<{ owner?: string; repository?: string; ref?: string }>,
+  ) {
+    super(`${operation} failed: ${code}`);
+    this.name = 'GitHubCapabilityError';
+  }
+}
+
 export interface GitHubIntegrationConfiguration {
   resolveGitHubToken?: (connection: GitHubConnection, context: import('./types.js').CanonicalInvocationContext) => Promise<string>;
   resolveWebhookSecret?: (connection: GitHubConnection) => Promise<string>;
@@ -71,6 +89,76 @@ interface InternalGitHubIntegrationOptions {
 
 function now(): string {
   return new Date().toISOString();
+}
+
+function providerError(
+  error: unknown,
+  operation: GitHubCapabilityName,
+  context: GitHubCapabilityError['context'],
+  notFoundCode: Extract<GitHubCapabilityErrorCode, 'REPOSITORY_NOT_FOUND' | 'REF_NOT_FOUND'>,
+): GitHubCapabilityError {
+  if (error instanceof GitHubCapabilityError) return error;
+  const status = typeof error === 'object' && error !== null && 'status' in error ? Number((error as { status: unknown }).status) : undefined;
+  const message = error instanceof Error ? error.message : '';
+  if (status === 404) return new GitHubCapabilityError(notFoundCode, operation, context);
+  if (status === 401 || status === 403 || message === 'Missing GitHub token resolver.') {
+    return new GitHubCapabilityError('AUTHENTICATION_UNAVAILABLE', operation, context);
+  }
+  return new GitHubCapabilityError('PROVIDER_FAILURE', operation, context);
+}
+
+function safeOperationError(error: unknown, operation: GitHubCapabilityName, context: GitHubCapabilityError['context']): GitHubCapabilityError {
+  if (error instanceof GitHubCapabilityError) return error;
+  const status = typeof error === 'object' && error !== null && 'status' in error ? Number((error as { status: unknown }).status) : undefined;
+  const message = error instanceof Error ? error.message : '';
+  return new GitHubCapabilityError(
+    status === 401 || status === 403 || message === 'Missing GitHub token resolver.' ? 'AUTHENTICATION_UNAVAILABLE' : 'PROVIDER_FAILURE',
+    operation,
+    context,
+  );
+}
+
+function validateRepositorySourceInput(input: GetRepositorySourceInput): void {
+  const context = { owner: input.owner, repository: input.repository, ref: input.ref };
+  if (!/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$/.test(input.owner) || !/^[A-Za-z0-9._-]{1,100}$/.test(input.repository)) {
+    throw new GitHubCapabilityError('INVALID_INPUT', 'github.repository.read', context);
+  }
+  if (input.ref !== undefined && (
+    input.ref.length === 0 || input.ref.length > 255 || /[\u0000-\u0020]/.test(input.ref) ||
+    [...input.ref].some((character) => '~^:?*[\\'.includes(character)) ||
+    input.ref.includes('..') || input.ref.includes('@{') || input.ref.startsWith('.') || input.ref.endsWith('.') ||
+    input.ref.endsWith('/') || input.ref.endsWith('.lock')
+  )) {
+    throw new GitHubCapabilityError('INVALID_INPUT', 'github.repository.read', context);
+  }
+}
+
+function sanitizeConnection(connection: GitHubConnection): GitHubConnection {
+  const sanitizeReference = (reference: GitHubConnection['credentialReference']) => reference ? {
+    secretId: reference.secretId,
+    tenantId: reference.tenantId,
+    ...(reference.provider === undefined ? {} : { provider: reference.provider }),
+    ...(reference.accountId === undefined ? {} : { accountId: reference.accountId }),
+    ...(reference.kind === undefined ? {} : { kind: reference.kind }),
+  } : undefined;
+  return {
+    id: connection.id,
+    tenantId: connection.tenantId,
+    applicationId: connection.applicationId,
+    environment: connection.environment,
+    provider: 'github',
+    credentialReference: sanitizeReference(connection.credentialReference),
+    webhookSecretReference: sanitizeReference(connection.webhookSecretReference),
+    authMechanism: connection.authMechanism,
+    status: connection.status,
+    installationId: connection.installationId,
+    defaultOwner: connection.defaultOwner,
+    accountLogin: connection.accountLogin,
+    accountType: connection.accountType,
+    capabilities: connection.capabilities ? [...connection.capabilities] : undefined,
+    createdAt: connection.createdAt,
+    updatedAt: connection.updatedAt,
+  };
 }
 
 function getResourceRef(result: unknown, fallback: Partial<GitHubResourceRef>): GitHubResourceRef | undefined {
@@ -150,7 +238,15 @@ function buildGitHubIntegration(options: InternalGitHubIntegrationOptions = {}) 
     resource: Partial<GitHubResourceRef>,
     execute: (connection: GitHubConnection, context: Awaited<ReturnType<typeof createCanonicalInvocationContext>>) => Promise<Result>,
   ): Promise<Result> {
-    const connection = await loadConnection(state, connectionId);
+    let connection: GitHubConnection;
+    try {
+      connection = await loadConnection(state, connectionId);
+    } catch {
+      throw new GitHubCapabilityError('PROVIDER_FAILURE', capability, {
+        owner: resource.owner,
+        repository: resource.repository,
+      });
+    }
     const context = await createCanonicalInvocationContext(authority, invocation, capability);
     const operation: GitHubOperationRecord = {
       id: randomUUID(),
@@ -187,10 +283,11 @@ function buildGitHubIntegration(options: InternalGitHubIntegrationOptions = {}) 
       }
       return result;
     } catch (error) {
+      const safeError = safeOperationError(error, capability, { owner: resource.owner, repository: resource.repository });
       const failed: GitHubOperationRecord = {
         ...operation,
         status: 'failed',
-        error: error instanceof Error ? error.message : String(error),
+        error: safeError.message,
         updatedAt: now(),
       };
       await updateOperation(state, failed);
@@ -207,7 +304,7 @@ function buildGitHubIntegration(options: InternalGitHubIntegrationOptions = {}) 
           timestamp: now(),
         });
       }
-      throw error;
+      throw safeError;
     }
   }
 
@@ -223,8 +320,9 @@ function buildGitHubIntegration(options: InternalGitHubIntegrationOptions = {}) 
       if (connection.authMechanism !== 'public' && !connection.credentialReference) {
         throw new Error(`GitHub ${connection.authMechanism} connections require an AppPort credential reference.`);
       }
-      await state.connections.insert(connection, connection.id);
-      return connection;
+      const sanitized = sanitizeConnection(connection);
+      await state.connections.insert(sanitized, sanitized.id);
+      return sanitized;
     },
     async getConnection(connectionId: string): Promise<GitHubConnection | null> {
       return state.connections.get(connectionId);
@@ -247,29 +345,41 @@ function buildGitHubIntegration(options: InternalGitHubIntegrationOptions = {}) 
         await state.repositories.insert({ ...repository, connectionId: input.connectionId }, `${input.connectionId}:${repository.owner}/${repository.name}`);
         return repository;
       },
-      source: (input: GetRepositorySourceInput, invocation: InvocationInput): Promise<GitRepositorySource> => runOperation(
-        'github.repository.read',
-        input.connectionId,
-        invocation,
-        { type: 'repository', identifier: `${input.owner}/${input.repository}`, owner: input.owner, repository: input.repository },
-        async (connection, context) => {
-          const repository = await transport.repositories.get(connection, context, input);
-          const ref = input.ref ?? repository.defaultBranch;
-          if (!ref) throw new Error(`GitHub repository ${input.owner}/${input.repository} has no default branch; specify a ref.`);
-          const commit = await transport.commits.get(connection, context, { ...input, sha: ref });
-          await state.repositories.insert({ ...repository, connectionId: input.connectionId }, `${input.connectionId}:${repository.owner}/${repository.name}`);
-          return {
-            kind: 'git',
-            provider: 'github',
-            owner: repository.owner,
-            repository: repository.name,
-            ref,
-            commit: commit.sha,
-            source: `https://github.com/${encodeURIComponent(repository.owner)}/${encodeURIComponent(repository.name)}.git`,
-            private: repository.private,
-          };
-        },
-      ),
+      source: async (input: GetRepositorySourceInput, invocation: InvocationInput): Promise<GitRepositorySource> => {
+        validateRepositorySourceInput(input);
+        return runOperation(
+          'github.repository.read',
+          input.connectionId,
+          invocation,
+          { type: 'repository', identifier: `${input.owner}/${input.repository}`, owner: input.owner, repository: input.repository },
+          async (connection, context) => {
+            const failureContext = { owner: input.owner, repository: input.repository, ref: input.ref };
+            let repository;
+            try {
+              repository = await transport.repositories.get(connection, context, input);
+            } catch (error) {
+              throw providerError(error, 'github.repository.read', failureContext, 'REPOSITORY_NOT_FOUND');
+            }
+            const ref = input.ref ?? repository.defaultBranch;
+            if (!ref) throw new GitHubCapabilityError('REF_NOT_FOUND', 'github.repository.read', failureContext);
+            let commit;
+            try {
+              commit = await transport.commits.get(connection, context, { ...input, sha: ref });
+            } catch (error) {
+              throw providerError(error, 'github.repository.read', { ...failureContext, ref }, 'REF_NOT_FOUND');
+            }
+            await state.repositories.insert({ ...repository, connectionId: input.connectionId }, `${input.connectionId}:${repository.owner}/${repository.name}`);
+            return {
+              source: 'git',
+              url: `https://github.com/${encodeURIComponent(repository.owner)}/${encodeURIComponent(repository.name)}.git`,
+              owner: repository.owner,
+              repository: repository.name,
+              ref,
+              commit: commit.sha,
+            };
+          },
+        );
+      },
     },
     branches: {
       list: (input: ListBranchesInput, invocation: InvocationInput) => runOperation('github.branch.read', input.connectionId, invocation, { type: 'branch', identifier: `${input.owner}/${input.repository}` }, async (connection, context) => transport.branches.list(connection, context, input)),

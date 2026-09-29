@@ -46,11 +46,19 @@ test('authorization is required for mutations', async () => {
 test('connection state stores references instead of secret material', async () => {
   const harness = createTestHarness(['github.repository.read']);
   const integration = createGitHubIntegrationForTesting({ ...harness, resolveWebhookSecret: async () => 'secret' });
-  await integration.upsertConnection(fixtureConnection());
+  await integration.upsertConnection({
+    ...fixtureConnection(),
+    token: 'ghp_must_not_persist',
+    password: 'must-not-persist',
+    transport: { authorization: 'Bearer must-not-persist' },
+    credentialReference: { ...fixtureConnection().credentialReference!, value: 'must-not-persist' },
+  } as unknown as ReturnType<typeof fixtureConnection>);
 
   const stored = await integration.getConnection('connection-1');
   assert.equal(stored?.credentialReference?.secretId, 'secret-1');
   assert.equal('token' in ((stored as unknown) as Record<string, unknown>), false);
+  const serialized = JSON.stringify(stored);
+  assert.doesNotMatch(serialized, /ghp_|must-not-persist|password|authorization|transport|"value"/i);
 });
 
 test('public connections require no credential reference while authenticated connections do', async () => {
@@ -79,14 +87,12 @@ test('repository source normalizes owner, repository, ref, commit, and source fo
   );
 
   assert.deepEqual(source, {
-    kind: 'git',
-    provider: 'github',
+    source: 'git',
+    url: 'https://github.com/acme/repo.git',
     owner: 'acme',
     repository: 'repo',
     ref: 'main',
     commit: 'abc',
-    source: 'https://github.com/acme/repo.git',
-    private: false,
   });
 });
 

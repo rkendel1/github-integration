@@ -13,7 +13,9 @@ test('architecture audit invariants pass', async () => {
   const audit = await runArchitectureAudit(root);
   assert.equal(audit.noSecondDurableDatabase, true);
   assert.equal(audit.noConsumerDependencies, true);
+  assert.equal(audit.noComputeImports, true);
   assert.equal(audit.noSecretStoreDependency, true);
+  assert.equal(audit.feltDbIsOnlyDurableState, true);
   assert.equal(audit.uiActionsMapToCapabilities, true);
   assert.equal(audit.allMutationsAuthorized, true);
   assert.equal(audit.allMutationsGenerateEvidence, true);
@@ -36,4 +38,6 @@ test('feltdb.flow is valid FlowSpec according to the pinned @feltdb/core grammar
 test('public api barrel does not export octokit implementation details', async () => {
   const indexSource = await readFile(path.join(root, 'src', 'index.ts'), 'utf8');
   assert.doesNotMatch(indexSource, /Octokit/);
+  const declaration = await readFile(path.join(root, 'dist', 'src', 'index.d.ts'), 'utf8');
+  assert.doesNotMatch(declaration, /Octokit|RequestError|@octokit|api\.github\.com|\/repos\//i);
 });

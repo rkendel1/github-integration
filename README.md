@@ -36,7 +36,7 @@ npm test
 npm run package:check
 ```
 
-The installable package is `@appport/github@1.0.1` and supports Node.js 22 or newer. Only the package root is public:
+The installable package is `@appport/github@1.0.2` and supports Node.js 22 or newer. Only the package root is public:
 
 ```ts
 import { createGitHubIntegration } from '@appport/github';
@@ -127,7 +127,7 @@ The public TypeScript API exposes normalized product-owned types and operation g
 
 - `github.organizations.list/get`
 - `github.repositories.list/get`
-- `github.repositories.source` (normalized Git source descriptor: owner, repository, ref, commit, source)
+- `github.repositories.source` (normalized Git source descriptor: source, URL, owner, repository, ref, commit)
 - `github.branches.list/get/create`
 - `github.commits.list/get`
 - `github.issues.list/get/create/update/comment`

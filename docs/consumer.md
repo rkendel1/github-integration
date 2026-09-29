@@ -32,7 +32,7 @@ The invocation supplies application context. Principal, tenant, authentication, 
 
 ## Errors
 
-Authentication or authorization failure is reported before provider transport with `AuthenticationRequiredError` or `AuthorizationRequiredError`. Unknown connections and unresolved credentials are ordinary `Error` failures. Malformed or unsupported webhook input throws `InvalidWebhookPayloadError`. Provider failures are not exposed as Octokit types in the public contract.
+Authentication or authorization failure is reported before provider transport with `AuthenticationRequiredError` or `AuthorizationRequiredError`. Source resolution reports `GitHubCapabilityError` with `INVALID_INPUT`, `REPOSITORY_NOT_FOUND`, `REF_NOT_FOUND`, `AUTHENTICATION_UNAVAILABLE`, or `PROVIDER_FAILURE`; provider messages and credentials are not copied into the public error or durable operation record. Malformed or unsupported webhook input throws `InvalidWebhookPayloadError`. Provider failures are not exposed as Octokit types in the public contract.
 
 ## Webhooks
 
@@ -74,7 +74,9 @@ const source = await github.repositories.source(
   { connectionId, owner: 'acme', repository: 'application', ref: 'main' },
   { applicationId: 'source-consumer' },
 );
-// { kind: 'git', provider: 'github', owner, repository, ref, commit, source, private }
+// { source: 'git', url, owner, repository, ref, commit }
 ```
 
-The descriptor contains no credential. A provider-neutral consumer can project `kind`, `owner`, `repository`, `ref`, `commit`, and `source` into its own Git source primitive without importing GitHub transport or authentication types. Authenticated source resolution remains behind this package and AppPort credential references.
+The descriptor contains no provider discriminator or credential. A consumer can pass `source`, `url`, `owner`, `repository`, `ref`, and `commit` to a generic Git materializer without importing GitHub transport or authentication types. Authenticated source resolution remains behind this package and AppPort credential references.
+
+The requested `ref` is preserved while `commit` records the immutable resolved SHA. When `ref` is omitted, resolution uses the repository's default branch. Resolution fails atomically: it never returns a partial source when the repository, ref, authentication, or provider request fails.

@@ -1,5 +1,6 @@
 export {
   createGitHubIntegration,
+  GitHubCapabilityError,
   InvalidWebhookPayloadError,
 } from './integration.js';
 export {
@@ -17,5 +18,6 @@ export type {
   GitHubIntegration,
   GitHubIntegrationConfiguration,
   GitHubIntegrationOptions,
+  GitHubCapabilityErrorCode,
 } from './integration.js';
 export type * from './types.js';

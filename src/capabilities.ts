@@ -46,7 +46,7 @@ export const githubAppPortManifest: ApplicationManifest = Object.freeze({
   application: {
     id: 'github',
     name: 'GitHub',
-    version: '1.0.1',
+    version: '1.0.2',
   },
   metadata: {
     service: 'github',

@@ -70,14 +70,12 @@ export interface GitHubRepository {
 
 /** Provider-neutral description of immutable Git repository source. */
 export interface GitRepositorySource {
-  kind: 'git';
-  provider: 'github';
+  source: 'git';
+  url: string;
   owner: string;
   repository: string;
   ref: string;
   commit: string;
-  source: string;
-  private: boolean;
 }
 
 export interface GitHubBranch {

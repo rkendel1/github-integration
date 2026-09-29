@@ -23,7 +23,7 @@ try {
   const pack = run('npm', ['pack', '--json', '--pack-destination', temporaryRoot], { cwd: root, capture: true, env: npmEnvironment });
   const [manifest] = JSON.parse(pack.stdout);
   assert.equal(manifest.name, '@appport/github');
-  assert.equal(manifest.version, '1.0.1');
+  assert.equal(manifest.version, '1.0.2');
   const included = new Set(manifest.files.map((file) => file.path));
   for (const required of ['package.json', 'feltdb.flow', 'README.md', 'docs/package.md', 'docs/consumer.md', 'docs/dsl-audit.md', 'dist/src/index.js', 'dist/src/index.d.ts']) {
     assert.ok(included.has(required), `package is missing ${required}`);
@@ -66,7 +66,7 @@ const input: MergePullRequestInput = { connectionId: connection.id, owner: 'acme
 const github = createGitHubIntegration();
 void github.pullRequests.merge(input, { applicationId: 'consumer' });
 declare const source: GitRepositorySource;
-const genericGitSource: { kind: 'git'; owner: string; repository: string; ref: string; commit: string; source: string } = source;
+const genericGitSource: { source: 'git'; url: string; owner: string; repository: string; ref: string; commit: string } = source;
 void genericGitSource;
 `);
   run(path.join(root, 'node_modules/.bin/tsc'), ['--noEmit', '--skipLibCheck', '--strict', '--target', 'ES2022', '--module', 'NodeNext', '--moduleResolution', 'NodeNext', path.join(temporaryRoot, 'consumer.ts')], { cwd: temporaryRoot });

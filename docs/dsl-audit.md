@@ -1,6 +1,6 @@
 # AppPort GitHub DSL audit
 
-This audit compares `@appport/github@1.0.1` with the canonical AppPort Services DSL and AppPort application manifest model.
+This audit compares the `@appport/github@1.0.1` implementation with the canonical AppPort Services DSL and AppPort application manifest model. The resulting alignment ships in `1.0.2`.
 
 | Concern | Established AppPort pattern | GitHub alignment |
 | --- | --- | --- |
@@ -39,9 +39,29 @@ The contract-level flow is:
 App
   → use github { repositories = true }
   → github.repository.read
-  → { owner, repository, ref, commit, source }
+  → { source: "git", url, owner, repository, ref, commit }
   → provider-neutral Compute Git source
   → Workspace
 ```
 
 The GitHub provider resolves GitHub semantics. Compute consumes a generic Git source shape; it does not import this package and GitHub is not a special Compute source type.
+
+## Verification matrix
+
+| Boundary | Verification |
+| --- | --- |
+| AppPort DSL | PASS |
+| Scoped capabilities | PASS |
+| Provider manifest | PASS |
+| Semantic operation names | PASS |
+| Credential isolation | PASS |
+| FeltDB persistence | PASS |
+| Public repository access | PASS |
+| Source resolution | PASS |
+| Immutable commit provenance | PASS |
+| Provider-neutral source | PASS |
+| Compute independence | PASS |
+| Public package exports | PASS |
+| Published tarball | PASS |
+| Error/secret isolation | PASS |
+| Documentation parity | PASS |
