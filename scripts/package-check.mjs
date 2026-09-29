@@ -25,7 +25,7 @@ try {
   assert.equal(manifest.name, '@appport/github');
   assert.equal(manifest.version, '1.0.1');
   const included = new Set(manifest.files.map((file) => file.path));
-  for (const required of ['package.json', 'feltdb.flow', 'README.md', 'docs/package.md', 'docs/consumer.md', 'dist/src/index.js', 'dist/src/index.d.ts']) {
+  for (const required of ['package.json', 'feltdb.flow', 'README.md', 'docs/package.md', 'docs/consumer.md', 'docs/dsl-audit.md', 'dist/src/index.js', 'dist/src/index.d.ts']) {
     assert.ok(included.has(required), `package is missing ${required}`);
   }
   assert.ok([...included].every((file) => !file.startsWith('tests/') && !file.startsWith('src/') && !file.startsWith('scripts/')));
@@ -40,7 +40,7 @@ try {
   }
 
   await writeFile(path.join(temporaryRoot, 'consumer.mjs'), `
-import { createGitHubIntegration } from '@appport/github';
+import { createGitHubIntegration, githubAppPortManifest, parseGitHubCapabilityDeclaration } from '@appport/github';
 const authority = {
   async session() { return { authenticated: true, principal: { id: 'principal:test', kind: 'user' }, tenant: { id: 'tenant:test' }, claims: {}, capabilities: [], session: null, delegation: null }; },
   async authorize() { return false; },
@@ -50,7 +50,8 @@ const now = new Date().toISOString();
 await github.upsertConnection({ id: 'connection-1', tenantId: 'tenant:test', applicationId: 'consumer', environment: 'test', provider: 'github', credentialReference: { secretId: 'secret-1', tenantId: 'tenant:test', provider: 'github' }, authMechanism: 'personal_access_token', status: 'configured', createdAt: now, updatedAt: now });
 await github.issues.create({ connectionId: 'connection-1', owner: 'acme', repository: 'repo', title: 'test' }, { applicationId: 'consumer' }).then(() => { throw new Error('operation unexpectedly authorized'); }, (error) => { if (!String(error).includes('Authorization required')) throw error; });
 if (!(await github.flow()).includes('app github_integration')) throw new Error('canonical feltdb.flow unavailable');
-if (github.appBoundryContract === undefined || typeof github.webhooks.handle !== 'function') throw new Error('public contract incomplete');
+if (github.appBoundryContract === undefined || typeof github.webhooks.handle !== 'function' || github.manifest() !== githubAppPortManifest) throw new Error('public contract incomplete');
+if (!parseGitHubCapabilityDeclaration('use github {\\n repositories = true\\n}').operations.includes('github.repository.read')) throw new Error('GitHub DSL unavailable');
 `);
   await run(process.execPath, [path.join(temporaryRoot, 'consumer.mjs')], { cwd: temporaryRoot });
 
@@ -59,11 +60,14 @@ if (github.appBoundryContract === undefined || typeof github.webhooks.handle !==
   run(feltdbBinary, ['validate', packagedFlowPath], { cwd: temporaryRoot });
 
   await writeFile(path.join(temporaryRoot, 'consumer.ts'), `
-import { createGitHubIntegration, type GitHubConnection, type MergePullRequestInput } from '@appport/github';
+import { createGitHubIntegration, type GitHubConnection, type GitRepositorySource, type MergePullRequestInput } from '@appport/github';
 declare const connection: GitHubConnection;
 const input: MergePullRequestInput = { connectionId: connection.id, owner: 'acme', repository: 'repo', pullNumber: 1, method: 'squash' };
 const github = createGitHubIntegration();
 void github.pullRequests.merge(input, { applicationId: 'consumer' });
+declare const source: GitRepositorySource;
+const genericGitSource: { kind: 'git'; owner: string; repository: string; ref: string; commit: string; source: string } = source;
+void genericGitSource;
 `);
   run(path.join(root, 'node_modules/.bin/tsc'), ['--noEmit', '--skipLibCheck', '--strict', '--target', 'ES2022', '--module', 'NodeNext', '--moduleResolution', 'NodeNext', path.join(temporaryRoot, 'consumer.ts')], { cwd: temporaryRoot });
 } finally {

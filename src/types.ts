@@ -24,9 +24,9 @@ export interface GitHubConnection {
   applicationId: string;
   environment: string;
   provider: 'github';
-  credentialReference: SecretReference;
+  credentialReference?: SecretReference;
   webhookSecretReference?: SecretReference;
-  authMechanism: 'github_app' | 'oauth_token' | 'personal_access_token';
+  authMechanism: 'public' | 'github_app' | 'oauth_token' | 'personal_access_token';
   status: 'configured' | 'missing' | 'invalid' | 'needs_authorization';
   installationId?: number;
   defaultOwner?: string;
@@ -66,6 +66,18 @@ export interface GitHubRepository {
   archived: boolean;
   defaultBranch?: string;
   url?: string;
+}
+
+/** Provider-neutral description of immutable Git repository source. */
+export interface GitRepositorySource {
+  kind: 'git';
+  provider: 'github';
+  owner: string;
+  repository: string;
+  ref: string;
+  commit: string;
+  source: string;
+  private: boolean;
 }
 
 export interface GitHubBranch {
@@ -206,6 +218,7 @@ export interface ListOrganizationsInput { connectionId: string }
 export interface GetOrganizationInput extends ListOrganizationsInput { organization: string }
 export interface ListRepositoriesInput { connectionId: string; organization?: string }
 export interface GetRepositoryInput { connectionId: string; owner: string; repository: string }
+export interface GetRepositorySourceInput extends GetRepositoryInput { ref?: string }
 export interface ListBranchesInput extends GetRepositoryInput {}
 export interface GetBranchInput extends GetRepositoryInput { branch: string }
 export interface CreateBranchInput extends GetBranchInput { fromSha: string }

@@ -76,6 +76,9 @@ function mapPullRequest(data: any): GitHubPullRequest {
 
 export function createOctokitTransport(resolveToken: TokenResolver): GitHubTransport {
   async function client(connection: GitHubConnection, context: CanonicalInvocationContext): Promise<Octokit> {
+    if (connection.authMechanism === 'public') {
+      return new Octokit();
+    }
     const token = await resolveToken(connection, context);
     return new Octokit({ auth: token });
   }

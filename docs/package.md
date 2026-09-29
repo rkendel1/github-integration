@@ -10,17 +10,17 @@ The only supported entry point is the package root:
 import { createGitHubIntegration } from '@appport/github';
 ```
 
-The root exports the constructor, public errors, normalized GitHub contracts, operation inputs, connection and webhook records, and `AppPort/ui/1` contribution types. Source paths and implementation subpaths are not exports. The artifact contains compiled runtime files, declarations, this documentation, the package README, and the authoritative `feltdb.flow`; it excludes repository source, tests, fixtures, scripts, and development configuration.
+The root exports the constructor, public errors, normalized GitHub contracts, DSL parser, derived `AppPort/1` manifest, operation inputs, connection and webhook records, and `AppPort/ui/1` contribution types. Source paths and implementation subpaths are not exports. The artifact contains compiled runtime files, declarations, this documentation, the DSL audit, the package README, and the authoritative `feltdb.flow`; it excludes repository source, tests, fixtures, scripts, and development configuration.
 
 ## Dependencies
 
 Runtime dependencies are `@appport/appboundry`, `@appport/sdk`, `@appport/services`, `@authboundry/core`, `@feltdb/core`, and `@octokit/rest`. The GitHub SDK is private to the transport and is not a consumer contract. Development dependencies are TypeScript and Node.js declarations. Factory, Attn, PNA, and PAX are not dependencies.
 
-All required runtime packages are currently published on npm at the exact versions in `package.json`. Therefore the current local mechanism is a normal repository checkout followed by `npm install`; consumers can use a tarball from `npm run package` until this package itself is published. There is no hidden workspace alias or copied platform source.
+All required runtime packages and `@appport/github@1.0.1` are published on npm at the exact versions in `package.json`. Development uses a normal repository checkout followed by `npm install`; release candidates can also be inspected as tarballs from `npm run package`. There is no hidden workspace alias or copied platform source.
 
 ## Publication status and migration
 
-As of this repository version, `@appport/github@1.0.1` is packaged and verified locally but publication is not asserted by the repository. Consumers should install the generated tarball or use the repository-native dependency mechanism agreed for development. After npm publication, migration should be only the dependency reference:
+`@appport/github@1.0.1` is published on npm. Consumers install the exact registry version with:
 
 ```json
 { "dependencies": { "@appport/github": "1.0.1" } }
@@ -32,6 +32,6 @@ If a platform package later has a publication gap, use its smallest supported re
 
 `npm run package` builds through npm's standard packing lifecycle and writes the tarball to `artifacts/`. `npm run package:check` packs the same commit into a temporary directory, validates contents and exports, installs it in an isolated consumer, runs a public import and normalized operation, verifies `feltdb.flow` with `feltdb validate`, and type-checks public contracts.
 
-## Intended Factory dependency
+## Consumer independence
 
-The next change belongs in Factory: `Factory -> @appport/github -> GitHub`. Factory consumes normalized operations and must not import Octokit, own GitHub credentials or webhook verification, persist a parallel GitHub model, or duplicate GitHub capability/API types.
+Consumers use the semantic AppPort contract and must not import Octokit, own GitHub credentials or webhook verification, persist a parallel GitHub model, or duplicate GitHub API types. Compute remains independent: its Git source primitive accepts normalized source data and does not depend on `@appport/github`.

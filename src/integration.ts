@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { createAuthBoundry } from '@authboundry/core';
 import type { FeltDBOptions } from '@feltdb/core';
 import { createCanonicalInvocationContext } from './auth.js';
-import { mutationCapabilities } from './capabilities.js';
+import { githubAppPortManifest, mutationCapabilities } from './capabilities.js';
 import { createOctokitTransport } from './octokit.js';
 import { appBoundryContract } from './platform.js';
 import { createGitHubIntegrationState, type GitHubIntegrationState } from './state.js';
@@ -23,11 +23,13 @@ import type {
   GetOrganizationInput,
   GetPullRequestInput,
   GetRepositoryInput,
+  GetRepositorySourceInput,
   GitHubCapabilityName,
   GitHubConnection,
   GitHubEvidenceRecord,
   GitHubOperationRecord,
   GitHubPullRequest,
+  GitRepositorySource,
   GitHubResourceRef,
   InvocationInput,
   ListBranchesInput,
@@ -211,10 +213,16 @@ function buildGitHubIntegration(options: InternalGitHubIntegrationOptions = {}) 
 
   return {
     appBoundryContract,
+    manifest() {
+      return githubAppPortManifest;
+    },
     async flow(): Promise<string> {
       return readFile(new URL('../../feltdb.flow', import.meta.url), 'utf8');
     },
     async upsertConnection(connection: GitHubConnection): Promise<GitHubConnection> {
+      if (connection.authMechanism !== 'public' && !connection.credentialReference) {
+        throw new Error(`GitHub ${connection.authMechanism} connections require an AppPort credential reference.`);
+      }
       await state.connections.insert(connection, connection.id);
       return connection;
     },
@@ -239,6 +247,29 @@ function buildGitHubIntegration(options: InternalGitHubIntegrationOptions = {}) 
         await state.repositories.insert({ ...repository, connectionId: input.connectionId }, `${input.connectionId}:${repository.owner}/${repository.name}`);
         return repository;
       },
+      source: (input: GetRepositorySourceInput, invocation: InvocationInput): Promise<GitRepositorySource> => runOperation(
+        'github.repository.read',
+        input.connectionId,
+        invocation,
+        { type: 'repository', identifier: `${input.owner}/${input.repository}`, owner: input.owner, repository: input.repository },
+        async (connection, context) => {
+          const repository = await transport.repositories.get(connection, context, input);
+          const ref = input.ref ?? repository.defaultBranch;
+          if (!ref) throw new Error(`GitHub repository ${input.owner}/${input.repository} has no default branch; specify a ref.`);
+          const commit = await transport.commits.get(connection, context, { ...input, sha: ref });
+          await state.repositories.insert({ ...repository, connectionId: input.connectionId }, `${input.connectionId}:${repository.owner}/${repository.name}`);
+          return {
+            kind: 'git',
+            provider: 'github',
+            owner: repository.owner,
+            repository: repository.name,
+            ref,
+            commit: commit.sha,
+            source: `https://github.com/${encodeURIComponent(repository.owner)}/${encodeURIComponent(repository.name)}.git`,
+            private: repository.private,
+          };
+        },
+      ),
     },
     branches: {
       list: (input: ListBranchesInput, invocation: InvocationInput) => runOperation('github.branch.read', input.connectionId, invocation, { type: 'branch', identifier: `${input.owner}/${input.repository}` }, async (connection, context) => transport.branches.list(connection, context, input)),

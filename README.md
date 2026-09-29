@@ -46,6 +46,25 @@ const github = createGitHubIntegration({ authority, felt, configuration });
 
 See [`docs/consumer.md`](docs/consumer.md) for the complete consumer contract and [`docs/package.md`](docs/package.md) for artifact contents, publication status, and the npm migration path.
 
+## AppPort DSL
+
+Applications declare GitHub intent with the same `use` syntax as other AppPort capabilities:
+
+```toml
+use github
+```
+
+Applications that need only part of the capability use the established AppPort capability-block form:
+
+```toml
+use github {
+  repositories = true
+  webhooks = true
+}
+```
+
+Supported groups reflect implemented behavior: `organizations`, `repositories`, `webhooks`, `pull_requests`, and `issues`. Repository intent includes normalized repository, branch, and commit operations. The declaration contains no token, OAuth secret, private key, REST route, storage configuration, or authorization grant. `parseGitHubCapabilityDeclaration()` validates this portion of `appport.toml`; `githubAppPortManifest` and `github.manifest()` expose the derived `AppPort/1` provider contract.
+
 ## Configuration and credentials
 
 GitHub connection metadata is durable. Credential values are not.
@@ -62,7 +81,7 @@ Expected configuration includes:
 - GitHub credential reference
 - GitHub webhook secret reference
 
-AppPort Services remains the configuration and credential boundary. Secret values are write-only and must not appear in state, logs, UI metadata, URLs, or evidence.
+Public connections use `authMechanism: 'public'` and need no credential reference. Authenticated connections use `github_app`, `oauth_token`, or `personal_access_token` plus an AppPort Services `SecretReference`. AppPort Services remains the configuration and credential boundary. Secret values are write-only and must not appear in the DSL, state, logs, UI metadata, URLs, source descriptors, or evidence.
 
 ## Authentication and authorization
 
@@ -108,6 +127,7 @@ The public TypeScript API exposes normalized product-owned types and operation g
 
 - `github.organizations.list/get`
 - `github.repositories.list/get`
+- `github.repositories.source` (normalized Git source descriptor: owner, repository, ref, commit, source)
 - `github.branches.list/get/create`
 - `github.commits.list/get`
 - `github.issues.list/get/create/update/comment`
@@ -148,6 +168,8 @@ The response is capability-filtered. The UI never grants capability authority.
 ## Composition
 
 The GitHub UI surface is designed to compose with other AppPort products without product-specific host code.
+
+For Compute, the boundary is `App → use github { repositories = true } → GitHub capability → Git repository source → Compute Git source → Workspace`. Compute owns the provider-neutral Git source primitive and does not import this package merely to clone a public repository. GitHub is one possible source provider alongside GitLab, self-hosted Git, and arbitrary Git URLs.
 
 ## Factory integration
 

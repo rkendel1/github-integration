@@ -18,7 +18,8 @@
     "feltdb.flow",
     "README.md",
     "docs/package.md",
-    "docs/consumer.md"
+    "docs/consumer.md",
+    "docs/dsl-audit.md"
   ],
   "engines": {
     "node": ">=22"

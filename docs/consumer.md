@@ -45,3 +45,36 @@ Pass the untouched request body and normalized string headers to `github.webhook
 ## Provider isolation and durability
 
 Consumers import only the package root and integration-owned types. They must not depend on Octokit, GitHub SDK request/response/authentication types, package source paths, or GitHub transport internals. GitHub connections, normalized repository records, operations, evidence, and webhook deliveries remain integration-owned durable state in FeltDB.
+
+## Capability declaration
+
+Declare intent in `appport.toml`; do not put credentials or REST endpoints in the declaration:
+
+```toml
+use github {
+  repositories = true
+}
+```
+
+```ts
+import { githubAppPortManifest, parseGitHubCapabilityDeclaration } from '@appport/github';
+
+const declared = parseGitHubCapabilityDeclaration(appportToml);
+const provided = githubAppPortManifest.provides;
+```
+
+The block form follows the established AppPort `use capability { ... }` syntax. A plain `use github` selects every implemented GitHub group. The DSL declares requirements; AuthBoundry still decides whether a principal may invoke each operation.
+
+## Repository source boundary
+
+`github.repositories.source(...)` resolves a repository and ref to a normalized immutable Git source descriptor:
+
+```ts
+const source = await github.repositories.source(
+  { connectionId, owner: 'acme', repository: 'application', ref: 'main' },
+  { applicationId: 'source-consumer' },
+);
+// { kind: 'git', provider: 'github', owner, repository, ref, commit, source, private }
+```
+
+The descriptor contains no credential. A provider-neutral consumer can project `kind`, `owner`, `repository`, `ref`, `commit`, and `source` into its own Git source primitive without importing GitHub transport or authentication types. Authenticated source resolution remains behind this package and AppPort credential references.

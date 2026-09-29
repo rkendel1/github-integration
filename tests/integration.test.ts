@@ -49,8 +49,45 @@ test('connection state stores references instead of secret material', async () =
   await integration.upsertConnection(fixtureConnection());
 
   const stored = await integration.getConnection('connection-1');
-  assert.equal(stored?.credentialReference.secretId, 'secret-1');
+  assert.equal(stored?.credentialReference?.secretId, 'secret-1');
   assert.equal('token' in ((stored as unknown) as Record<string, unknown>), false);
+});
+
+test('public connections require no credential reference while authenticated connections do', async () => {
+  const harness = createTestHarness(['github.repository.read']);
+  const integration = createGitHubIntegrationForTesting({ ...harness, resolveWebhookSecret: async () => 'secret' });
+  const publicConnection = { ...fixtureConnection(), authMechanism: 'public' as const, credentialReference: undefined };
+
+  await assert.doesNotReject(integration.upsertConnection(publicConnection));
+  await assert.rejects(
+    integration.upsertConnection({ ...fixtureConnection(), credentialReference: undefined }),
+    /require an AppPort credential reference/,
+  );
+
+  const ui = await integration.ui('github.integration');
+  assert.equal(ui.configuration.requirements.some((requirement) => requirement.kind === 'credential_reference'), false);
+});
+
+test('repository source normalizes owner, repository, ref, commit, and source for generic Git consumers', async () => {
+  const harness = createTestHarness(['github.repository.read']);
+  const integration = createGitHubIntegrationForTesting({ ...harness, resolveWebhookSecret: async () => 'secret' });
+  await integration.upsertConnection(fixtureConnection());
+
+  const source = await integration.repositories.source(
+    { connectionId: 'connection-1', owner: 'acme', repository: 'repo' },
+    invocation,
+  );
+
+  assert.deepEqual(source, {
+    kind: 'git',
+    provider: 'github',
+    owner: 'acme',
+    repository: 'repo',
+    ref: 'main',
+    commit: 'abc',
+    source: 'https://github.com/acme/repo.git',
+    private: false,
+  });
 });
 
 test('repository records are isolated by connection id', async () => {

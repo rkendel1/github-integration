@@ -58,6 +58,9 @@ export async function createUiManifest(applicationId: string, connection: GitHub
       action('branch-create', 'Create Branch', 'github.branch.create', '/activity'),
     ], allowed)),
   ].filter((surface) => surface.id === 'connection' || surface.actions.length > 0);
+  const requirements = requiredConfiguration.filter((requirement) => (
+    requirement.kind !== 'credential_reference' || connection?.authMechanism !== 'public'
+  ));
 
   return {
     protocol: APPPORT_UI_PROTOCOL,
@@ -73,7 +76,7 @@ export async function createUiManifest(applicationId: string, connection: GitHub
       applicationId,
       environment: connection?.environment,
       status: connection?.status ?? 'missing',
-      requirements: [...requiredConfiguration],
+      requirements,
     },
     surfaces,
   };
